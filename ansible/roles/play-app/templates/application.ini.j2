@@ -1,0 +1,13 @@
+# options from deployment script
+-J-Xmx{{play_app.java_memory_max}}
+-J-Xms{{play_app.java_memory_initial}}
+-Dhttp.port={{play_app.http_port}}
+-Dhttp.address={{play_app.http_address}}
+-Dpidfile.path=/dev/null
+-Dconfig.file=/usr/share/{{play_app.name}}/conf/application.conf
+-Dlogger.file=/usr/share/{{play_app.name}}/conf/logger.xml
+{% if play_app.jvm_opts is defined %}
+{% for option in play_app.jvm_opts %}
+-D{{option}}
+{% endfor %}
+{% endif %}

@@ -1,0 +1,19 @@
+---
+- name: Install nginx
+  action: apt pkg={{ item }} state=latest
+  become: yes
+  with_items:
+   - nginx
+
+- name: Generate Diffie-Helmann parameters 
+  become: yes
+  command: /usr/bin/openssl dhparam -dsaparam -out /etc/nginx/dhparam.pem 2048
+
+- name: Copy nginx config
+  copy: src=nginx.conf dest=/etc/nginx/nginx.conf backup=yes
+
+- name: Disable default nginx site
+  file: path=/etc/nginx/sites-enabled/default state=absent
+
+- name: Restart nginx
+  service: name=nginx state=restarted

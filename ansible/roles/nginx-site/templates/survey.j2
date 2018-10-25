@@ -1,0 +1,35 @@
+server {
+  listen 80;
+  listen [::]:80;
+  server_name {{ survey_hostname }};
+  return 301 https://$server_name$request_uri;
+}
+
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  server_name {{ survey_hostname }};
+
+  ssl on;
+  ssl_certificate /etc/ssl/certs/{{ survey_hostname }}.pem;
+  ssl_certificate_key /etc/ssl/private/{{ survey_hostname }}.key;
+
+  client_max_body_size 1m;
+
+# rewrite ^/(.*)/$ /$1 permanent;
+  rewrite ^(/surveys/.*)/login $1 permanent;
+
+  location /demo {
+    return 301 https://$server_name/surveys/demo?genUser=1;
+  }
+
+  location /swap {
+    alias /home/deploy/swap;
+    index index.html;
+  }
+
+  location / {
+    proxy_pass http://localhost:{{survey_local_port}}/;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}

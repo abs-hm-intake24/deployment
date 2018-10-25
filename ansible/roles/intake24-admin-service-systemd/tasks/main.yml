@@ -1,0 +1,7 @@
+- name: Copy systemd service
+  become: yes
+  copy: src=intake24-admin.service dest=/etc/systemd/system/intake24-admin.service mode=0600
+
+- name: Start intake24-admin service
+  become: yes
+  service: name=intake24-admin state=restarted

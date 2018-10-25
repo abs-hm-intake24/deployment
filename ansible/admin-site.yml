@@ -1,0 +1,8 @@
+---
+- hosts: admin-site
+  remote_user: deploy
+  roles:
+    - intake24-admin-user
+    - intake24-admin-deploy-from-git
+    - intake24-admin-build
+    - intake24-admin-service-systemd

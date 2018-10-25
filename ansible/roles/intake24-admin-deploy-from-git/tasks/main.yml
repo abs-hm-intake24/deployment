@@ -1,0 +1,31 @@
+- name: Make sure Git is installed
+  become: yes
+  apt:
+    update-cache: yes
+    cache_valid_time: 86400
+    name: git
+    state: present
+
+- name: Make sure .ssh directory exists for intake24-admin
+  become: yes
+  file: name=/home/intake24-admin/.ssh state=directory owner=intake24-admin group=intake24-admin
+
+- name: Copy Git repository access key
+  become: yes
+  become_user: intake24-admin
+  copy: src={{ git.ssh_key_path }} dest=/home/intake24-admin/.ssh/intake24-admin-git mode=600 owner=intake24-admin group=intake24-admin
+
+- name: Make sure application directory exists
+  become: yes
+  file: path={{ app.directory }} state=directory owner=intake24-admin group=intake24-admin
+
+- name: Checkout source from Git repository
+  become: yes
+  become_user: intake24-admin
+  git:
+    repo: "{{ git.repository_url }}"
+    dest: "{{ app.directory}}"
+    key_file: /home/intake24-admin/.ssh/intake24-gitlab-deploy
+    version: "{{git.branch_name}}"
+    force: yes
+    accept_hostkey: true

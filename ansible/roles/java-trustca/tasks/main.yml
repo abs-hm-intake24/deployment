@@ -1,0 +1,8 @@
+---
+  - name: Copy Intake24 root CA certificate
+    copy: src={{ java_options.internal_ca_certificate_path }} dest=/tmp/ca.cert.pem
+  - name: Remove existing root CA certificate from Java keystore
+    shell: "keytool -delete -noprompt -storepass changeit -alias Intake24RootCA -keystore `update-alternatives --query java | grep 'Value: ' | grep -o '/.*/jre'`/lib/security/cacerts"
+    failed_when: false
+  - name: Add root CA certificate to Java keystore
+    shell: "keytool -import -trustcacerts -noprompt -storepass changeit -file /tmp/ca.cert.pem -alias Intake24RootCA -keystore `update-alternatives --query java | grep 'Value: ' | grep -o '/.*/jre'`/lib/security/cacerts"

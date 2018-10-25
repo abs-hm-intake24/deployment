@@ -1,0 +1,29 @@
+server {
+  listen 80;
+  listen [::]:80;
+  server_name {{ api_server.host_name }};
+
+  location /data-export/ {
+    proxy_pass http://localhost:{{data_export_service.local_port}}/;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+
+  location / {
+    proxy_pass http://localhost:{{api_server.local_port}}/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}
+
+
+server {
+  listen 80;
+  listen [::]:80;
+  server_name {{ url_shortener.host_name }};
+
+  location / {
+    proxy_pass http://localhost:{{api_server.local_port}}/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}

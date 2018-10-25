@@ -1,0 +1,9 @@
+---
+- hosts: api-server
+  remote_user: deploy
+  become: true
+  post_tasks:
+     - name: "Make sure local data export directory exists"
+       file: path=/var/run/{{play_app.name}}/local state=directory owner={{play_app.name}} group={{play_app.name}}
+  roles:
+    - play-app

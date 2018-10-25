@@ -1,0 +1,5 @@
+---
+  - name: Update apt
+    apt: update_cache=yes cache_valid_time=86400
+  - name: Install JRE
+    apt: name=openjdk-8-jre-headless state=latest

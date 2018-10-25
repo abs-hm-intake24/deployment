@@ -1,0 +1,12 @@
+---
+- name: install python-software-properties
+  apt: pkg=python-software-properties state=present update_cache=yes cache_valid_time=300
+
+- name: add Java ppa repo
+  apt_repository: repo=ppa:webupd8team/java state=present update_cache=yes
+
+- name: accept Oracle license prior JDK installation
+  shell: echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections; echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections creates=/usr/lib/jvm/java-8-oracle
+
+- name: install Java 8
+  apt: pkg=oracle-java8-installer state=present
