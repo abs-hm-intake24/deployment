@@ -1,0 +1,47 @@
+# See https://github.com/ANXS/postgresql/blob/master/defaults/main.yml for more options
+
+# Basic settings
+postgresql_version: 9.6
+postgresql_encoding: 'UTF-8'
+postgres_admin_user: postgres
+
+postgresql_locale_parts:
+  - 'en_GB' # Locale
+  - 'UTF-8' # Encoding
+
+postgresql_users:
+  - name: intake24
+
+postgresql_pg_hba_default: []
+
+# pg_hba.conf
+postgresql_pg_hba_custom:
+  - comment: "Allow Unix socket connections for '{{postgresql_service_user}}' and 'deploy'"
+    type: local
+    database: all
+    user: "{{postgresql_admin_user}}"
+    address: ''
+    method: 'peer map=postgres'
+  - comment: "Allow TCP connections from localhost as intake24"
+    type: host
+    database: intake24_system
+    user: "intake24"
+    address: 'localhost'
+    method: 'trust'
+
+# pg_ident.conf
+postgresql_pg_ident:
+    - comment: "Map deploy user to postgresql admin"
+      mapname: "postgres"
+      system_username: "deploy"
+      pg_username: "{{postgresql_admin_user}}"
+    - comment: "Map system postgresql user to postgresql admin"
+      mapname: "postgres"
+      system_username: "{{postgresql_service_user}}"
+      pg_username: "{{postgresql_admin_user}}"
+
+# postgresql.conf
+postgresql_listen_addresses:
+  - 'localhost'
+
+postgresql_ssl: off
