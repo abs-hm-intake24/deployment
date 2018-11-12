@@ -1,0 +1,6 @@
+{
+  "java_options": {
+     "add_internal_ca": false,
+     "internal_ca_certificate_path": "/path/to/internal/ca/cert"     
+  }  
+}
