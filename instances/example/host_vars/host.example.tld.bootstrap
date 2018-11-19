@@ -4,7 +4,7 @@ ansible_password: 123456
 
 # sudo password, required if the above user does not have passwordless sudo
 # enabled
-become_password: 123456
+ansible_become_pass: 123456
 
 # Delete the ansible_password and become_password lines above and uncomment 
 # this to use a private key to authenticate instead of a password
