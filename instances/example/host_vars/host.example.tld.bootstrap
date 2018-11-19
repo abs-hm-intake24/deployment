@@ -2,8 +2,12 @@
 ansible_user: root
 ansible_password: 123456
 
-# Delete the ansible_password line above and uncomment this to use a 
-# private key to authenticate instead of a password
+# sudo password, required if the above user does not have passwordless sudo
+# enabled
+become_password: 123456
+
+# Delete the ansible_password and become_password lines above and uncomment 
+# this to use a private key to authenticate instead of a password
 #ansible_ssh_private_key_file: /path/to/private/key
 
 deploy_user:
