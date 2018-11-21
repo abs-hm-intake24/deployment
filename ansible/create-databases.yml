@@ -1,0 +1,7 @@
+---
+- hosts: database
+  roles:
+    - { role: ANXS.postgresql,  become: true }
+    - create-databases
+
+
