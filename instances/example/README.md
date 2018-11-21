@@ -1,3 +1,7 @@
+These instructions assume that the control machine, i.e. the one used to build & install Intake24 runs a flavour of Debian GNU/Linux. They have been tested with Ubuntu 18.04 both running natively and in the Windows Subsystem for Linux.
+
+The instructions should work on macOS with minimal changes such as replacing the `apt-get` commands with the corresponding Homebrew or MacPorts commands.
+
 ### 1. Install Ansible and supporting tools
 
     sudo apt-get install ansible sshpass
@@ -41,15 +45,14 @@ directory (e.g. `instances/main`) run:
 
 For each server, make a copy of the `host.name.tld.bootstrap` file in `host_vars`. 
 The name should either be the server's host name or its IP address, but it must 
-be the same name as the one used in the `hosts`, e.g.:
+be the same name as the one used in the `hosts` file, e.g.:
 
     cp host.name.tld.bootstrap 192.68.1.1
 
 Edit the file to set the user name and authentication method that should be used 
 for the initial log on and the path to the public SSH key generated in step 1.
 
-The user must have the permission to use `sudo`. If the user does not have
-passwordless sudo enabled, then an additional 
+The user must have the permission to use `sudo`. 
 
 Then from the root directory of the deployment project run:
 
@@ -97,14 +100,14 @@ to request snapshots.
 
 Edit `instances/(instance name)/database/postgres-configuration.yml`.
 
-Fill the values in the `intake24` section:
+Set the following values in the `intake24` section:
 
 - `admin_user_email` must be a valid e-mail address in order to receive system
 notifications or reset the password. The default password is `intake24`.
 - `system_database.schema_snapshot_path`, `system_database.data_snapshot_path`
 and `food_database.snapshot_path` must point to the initial database snapshot
 files in PostgreSQL format (see 4.2).
-- Changing database names and users is optional.
+- (Optional) Set the database and user names.
 
 #### 4.4 Run the database initialisation script
 
@@ -129,7 +132,7 @@ Intake24 must currently be built using JDK 8. To install it run:
 
     sudo apt-get install openjdk-8-jdk-headless
 
-Intake24 uses the (SBT)[https://scala-sbt.org] build tool. To install it run the following command from root of the deployment repository:
+Intake24 uses the [SBT](https://scala-sbt.org) build tool. To install it run the following command from root of the deployment repository:
 
     sudo ./build-deps/install-sbt.sh
 
@@ -206,3 +209,11 @@ Edit `instances/(instance name)/api-server/play-app.json`:
 From the deployment repository root run:
 
     ./api-server.sh (instance name)
+
+TODO: Configure nginx
+Nginx site for api-server
+
+
+### 6. Build and install the Intake24 admin site
+
+    ./admin-site (instance name)
