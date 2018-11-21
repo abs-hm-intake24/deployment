@@ -1,0 +1,7 @@
+{
+  "nginx_site": {
+     "host_name": "admin-test.intake24.co.uk",
+     "config_file": "../instances/{{intake24_instance_name}}/admin-site/nginx-site",
+     "copy_ssl_certificate": false
+  }
+}

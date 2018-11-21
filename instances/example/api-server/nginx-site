@@ -1,0 +1,17 @@
+server {
+  listen 8001;
+  listen [::]:8001;
+  server_name 192.168.1.1;
+
+  location /data-export/ {
+    proxy_pass http://localhost:6401/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+ 
+  location / {
+    proxy_pass http://localhost:6400/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}

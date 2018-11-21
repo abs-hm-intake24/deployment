@@ -1,6 +1,7 @@
 ---
 ansible_user: deploy
-ansible_ssh_private_key_file: /path/to/deploy/user/private/key
+ansible_ssh_private_key_file: "./instances/{{intake24_instance_name}}/ssh/deploy"
 
 # Change this if Python 3 is not installed by default on the target server
 ansible_python_interpreter: /usr/bin/python3
+
