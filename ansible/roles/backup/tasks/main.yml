@@ -1,0 +1,81 @@
+- name: Create user for Intake24 backup service
+  become: true
+  user: name=intake24-backup comment="Intake24 backup service"
+
+- name: Ensure backup directory exists
+  become: true
+  become_user: intake24-backup
+  file: path=/home/intake24-backup/backups state=directory
+
+- name: Ensure AWS config directory exists
+  become: true
+  become_user: intake24-backup
+  file: path=/home/intake24-backup/.aws state=directory
+
+- name: Install package dependencies
+  action: apt pkg={{item}} state=latest update_cache=yes cache_valid_time=86400
+  become: true
+  with_items:
+    - python3
+    - python3-pip
+    - postgresql-client-10
+    - openssl
+    - msmtp-mta
+    - mailutils
+
+- name: Install Python dependencies
+  become: true
+  action: pip name={{item}} executable=pip3
+  with_items:
+    - boto3
+
+- name: Copy AWS credentials
+  become: true
+  become_user: intake24-backup
+  copy:
+    src: "../instances/{{intake24_instance_name}}/backup/aws.credentials"
+    dest: /home/intake24-backup/.aws/credentials
+    mode: 0644
+
+- name: Copy AWS config
+  become: true
+  become_user: intake24-backup
+  copy:
+    src: "../instances/{{intake24_instance_name}}/backup/aws.config"
+    dest: /home/intake24-backup/.aws/config
+    mode: 0644
+
+- name: Copy msmtp mailer config
+  become: true
+  become_user: intake24-backup
+  copy:
+    src: "../instances/{{intake24_instance_name}}/backup/msmtprc"
+    dest: /home/intake24-backup/.msmtprc
+    mode: 0600
+
+- name: Copy backup script and config files
+  become: true
+  become_user: intake24-backup
+  action: copy src={{item}} dest=/home/intake24-backup/{{item}} owner=intake24-backup group=intake24-backup mode=0644
+  with_items:
+   - backup.py
+   - "../instances/{{intake24_instance_name}}/backup/foods-config.json"
+   - "../instances/{{intake24_instance_name}}/backup/system-config.json"
+
+- name: Setup cron entry for food database
+  become: true
+  become_user: intake24-backup
+  cron:
+    name: "Backup Intake24 food database"
+    minute: "0"
+    hour: "3"
+    job: "/usr/bin/python3 /home/intake24-backup/backup.py /home/intake24-backup/foods-config.json 2>&1 | mail maintenance@intake24.co.uk -s \"Intake24 food database backup log\" -a \"From: Intake24 Maintenance <maintenance@intake24.co.uk>\""
+
+- name: Setup cron entry for system database
+  become: true
+  become_user: intake24-backup
+  cron:
+    name: "Backup Intake24 system database"
+    minute: "0"
+    hour: "4"
+    job: "/usr/bin/python3 /home/intake24-backup/backup.py /home/intake24-backup/system-config.json 2>&1 | mail maintenance@intake24.co.uk -s \"Intake24 system database backup log\" -a \"From: Intake24 Maintenance <maintenance@intake24.co.uk>\""
