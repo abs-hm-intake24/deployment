@@ -53,14 +53,18 @@
     dest: /home/intake24-backup/.msmtprc
     mode: 0600
 
-- name: Copy backup script and config files
+- name: Copy backup script
   become: true
   become_user: intake24-backup
-  action: copy src={{item}} dest=/home/intake24-backup/{{item}} owner=intake24-backup group=intake24-backup mode=0644
+  action: copy src=backup.py dest=/home/intake24-backup/backup.py owner=intake24-backup group=intake24-backup mode=0644
+
+- name: Copy config files
+  become: true
+  become_user: intake24-backup
+  action: copy src="../instances/{{intake24_instance_name}}/backup/{{item}}" dest=/home/intake24-backup/{{item}} owner=intake24-backup group=intake24-backup mode=0644
   with_items:
-   - backup.py
-   - "../instances/{{intake24_instance_name}}/backup/foods-config.json"
-   - "../instances/{{intake24_instance_name}}/backup/system-config.json"
+   - foods-config.json
+   - system-config.json
 
 - name: Setup cron entry for food database
   become: true
