@@ -74,7 +74,7 @@ Delete all of the files created during step 2 as well as `host.name.tld.bootstra
 
 #### 3.4. Create the deployment configuration files
 
-As described in step 3.2, make a copy of the `host.name.tld.bootstrap` file for each
+As described in step 3.2, make a copy of the `host.name.tld` file for each
 server. For automated `deploy` user setup described in 3.1-3.3 no further steps
 are required.
 
