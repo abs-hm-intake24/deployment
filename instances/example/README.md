@@ -5,6 +5,15 @@ Ubuntu 18.04 both running natively and in the Windows Subsystem for Linux.
 The instructions should work on macOS with minimal changes such as replacing the 
 `apt-get` commands with the corresponding Homebrew or MacPorts commands.
 
+Following instructions assume simple one-host deployment model using example
+host 192.168.1.1 and nginx sites served on following ports:
+- API Server - 8001
+- Admin Site - 80
+- Survey Site - 8000
+
+Any of these can be deployed to own dedicated host. While you set up your hosts
+in step 2, replace 192.168.1.1 accordingly (either with symbolic name or IP).
+ 
 ### 1. Install Ansible and supporting tools
 
     sudo apt-get install ansible sshpass
@@ -214,9 +223,9 @@ following:
 administrative site (e.g. `https://admin.intake24.co.uk`)
 - Set `intake24.surveyFrontendUrl` to the public domain name or IP address of 
 the survey site (e.g. `https://intake24.co.uk`)
-- Get a [reCAPTCHA key from Google](https://www.google.com/recaptcha) and set 
-the  `recaptcha.secretKey` to the key given in the `Server side integration` 
-section on reCAPTCHA's admin page
+- Get a [reCAPTCHA key from Google](https://www.google.com/recaptcha)
+(v2 Checkbox) and set the  `recaptcha.secretKey` to the key given in the
+`Server side integration` section on reCAPTCHA's admin page
 - (Optional) If using Intake24's short URLs service) set `intake24.shortUrlServiceUrl` 
 to the internal IP address of the short URL service
 - (Optional) If using Twilio for SMS notifications, fill out the Twilio account 
@@ -232,6 +241,10 @@ following:
 API server
 - Set `intake24.surveyFrontendUrl` to the public domain name or IP address of 
 the survey site (e.g. `https://intake24.co.uk`)
+
+Default setup uses AWS S3 storage to access image database. Refer to
+[Using local portion size image database](https://github.com/intake24/api-server/wiki/Using-local-portion-size-image-database)
+to serve image files locally.
 
 ##### 5.5.5. Edit build paths and JVM configuration
 
@@ -251,23 +264,27 @@ produced by step 5.3. It can be found at
 
 - (Optional) change the JVM memory settings as needed
 
-#### 5.6. Install the API server
+#### 5.6. Applying database migrations
+
+- this step can be skipped if you have latest databases snapshots
+- to apply database migration, refer to [Applying database migrations](https://github.com/intake24/api-server/wiki/Applying-database-migrations)
+
+#### 5.7. Install the API server
 
 From the deployment repository root run:
 
     ./api-server.sh (instance name)
     ./data-export-service.sh (instance name)
-    ./nginx-api-server.sh (instance name)
 
-#### 5.7. Install nginx proxy for the API server
+#### 5.8. Install nginx proxy for the API server
 
-##### 5.7.1. Install nginx
+##### 5.8.1. Install nginx
 
 From the deployment repository root run:
 
     ./configure-nginx.sh (instance name)
 
-##### 5.7.2. Prepare the nginx configuration for API server
+##### 5.8.2. Prepare the nginx configuration for API server
 
 Edit the following files:
 
@@ -276,7 +293,14 @@ Edit the following files:
 
 Set the server names and ports as needed.
 
-##### 5.7.3. Create nginx site for API server
+Optional SSL setup: use `nginx-site-ssl` instead of `nginx-site` template
+- Delete `instances/(instance name)/api-server/nginx-site`
+- Rename `instances/(instance name)/api-server/nginx-site-ssl` to
+`instances/(instance name)/api-server/nginx-site`
+- Set your certificate and key path details 
+- Switch all external URLs in config files to point to https variant
+
+##### 5.8.3. Create nginx site for API server
 
 From the deployment repository root run:
 
@@ -298,7 +322,25 @@ Set the host names and ports in the following fields:
 
 From the deployment repository root run:
 
-    ./admin-site (instance name)
+    ./admin-site.sh (instance name)
+
+##### 6.1. Prepare the nginx configuration for Admin site
+
+Edit the following files:
+
+- `instances/(instance name)/admin-site/nginx-site.json`
+- `instances/(instance name)/admin-site/nginx-site`
+
+Set the server names and ports as needed.
+
+For SSL setup, use `instances/(instance name)/admin-site/nginx-site-ssl` (step 5.7.2.).
+
+##### 6.2 Create nginx site for Admin site
+
+From the deployment repository root run:
+
+    ./nginx-admin-site.sh (instance name)
+
 
 ### 7. Build and install the Intake24 survey site
 
@@ -390,3 +432,21 @@ produced by step 7.6. It can be found at
 From the deployment repository root run:
 
     ./survey-site.sh (instance name) 
+
+##### 7.8. Prepare the nginx configuration for Survey server
+
+Edit the following files:
+
+- `instances/(instance name)/survey-site/nginx-site.json`
+- `instances/(instance name)/survey-site/nginx-site`
+
+Set the server names and ports as needed.
+
+For SSL setup, use `instances/(instance name)/survey-site/nginx-site-ssl` (step 5.7.2.).
+
+##### 7.9 Create nginx site for Survey server
+
+From the deployment repository root run:
+
+    ./nginx-survey-site.sh (instance name)
+
