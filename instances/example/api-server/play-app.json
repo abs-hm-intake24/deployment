@@ -1,6 +1,6 @@
 {
   "play_app": {
-    "debian_package_path" : "/home/ivan/Intake24/api-server/ApiPlayServer/target/intake24-api-server_3.30.1-SNAPSHOT_all.deb",
+    "debian_package_path" : "/path/to/intake24/api-server/ApiPlayServer/target/intake24-api-server_3.30.1-SNAPSHOT_all.deb",
     "name": "intake24-api-server",
     "http_port": "6400",
     "http_address": "localhost",

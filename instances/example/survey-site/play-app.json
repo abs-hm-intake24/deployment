@@ -1,6 +1,6 @@
 {
   "play_app": {
-    "debian_package_path" : "/home/ivan/Intake24/survey-frontend/SurveyServer/target/intake24-survey-site_3.0.0-SNAPSHOT_all.deb",
+    "debian_package_path" : "/path/to/intake24/survey-frontend/SurveyServer/target/intake24-survey-site_3.0.0-SNAPSHOT_all.deb",
     "name": "intake24-survey-site",
     "http_port": "8003",
     "http_address": "192.168.1.1",

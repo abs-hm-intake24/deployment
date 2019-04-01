@@ -1,6 +1,6 @@
 {
   "play_app": {
-    "debian_package_path" : "/home/ivan/Intake24/api-server/DataExportService/target/intake24-data-export_4.2.0-SNAPSHOT_all.deb",
+    "debian_package_path" : "/path/to/intake24/api-server/DataExportService/target/intake24-data-export_4.2.0-SNAPSHOT_all.deb",
     "name": "intake24-data-export",
     "http_port": "6401",
     "http_address": "localhost",
