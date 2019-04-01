@@ -3,6 +3,18 @@ server {
   listen [::]:8001;
   server_name 192.168.1.1;
 
+  # example block for images stored locally
+  location /images/ {
+    # XHR-served images, set CORS headers based on your security requirements
+    if ($request_method = 'GET') {
+      add_header 'Access-Control-Allow-Origin' '*';
+      add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+      add_header 'Access-Control-Allow-Headers' 'User-Agent,X-Requested-With,Cache-Control,Content-Type,Range';
+    }
+
+    alias /path/to/intake24-images/;
+  }
+
   location /data-export/ {
     proxy_pass http://localhost:6401/;
     proxy_set_header Host $host;
