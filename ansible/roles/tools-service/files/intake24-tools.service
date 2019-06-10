@@ -1,0 +1,11 @@
+[Unit]
+Description=Intake24 database tools service
+After=syslog.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /opt/intake24/tools/start.sh
+WorkingDirectory=/opt/intake24/tools
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,38 @@
+modules = [
+  "uk.ac.ncl.intake24.storage.SimpleSharedStorageModule",
+  "uk.ac.ncl.intake24.serialization.JacksonCodecModule",
+  "uk.ac.ncl.intake24.secureurl.LocalSecureURLModule"
+]
+
+db {
+  system {
+    url = "jdbc:postgresql://192.168.56.2:5432/intake24_system"
+    user = "intake24"
+    password = "intake24"
+  }
+
+  foods {
+    url = "jdbc:postgresql://192.168.56.2:5432/intake24_foods"
+    user = "intake24"
+    password = "intake24"
+  }
+}
+
+authentication {
+  jwtSecret = "zV;3:xvweW]@G5JTK7j;At<;pSj:NM=g[ALNpj?[NiWoUu3jK;K@s^a/LPf8S:5K"
+}
+
+secureURL {
+  local {
+    validityPeriod = 2 hours
+    cleanupInterval = 10 minutes
+    directory = "C:\\Users\\Ivan\\Projects\\Intake24\\tmp\\export4"
+    downloadURLPrefix = "http://localhost:8080/files"
+  }
+}
+
+services {
+  foodFrequency {
+    batchSize = 1000
+  }
+}
