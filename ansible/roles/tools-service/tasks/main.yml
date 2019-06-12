@@ -1,3 +1,6 @@
+- name: Make sure intake24 group exists
+  group: name=intake24 state=present
+
 - name: Make sure service user exists
   user: name=intake24-tools group=intake24
 
@@ -8,7 +11,7 @@
   file: path=/opt/intake24/tools/local-files state=directory owner=intake24-tools group=intake24 mode=0775
 
 - name: Copy service jar
-  copy: src={{ local_jar_path }} dest=/opt/intake24/tools/{{ server_jar_name }}
+  copy: src={{ source_jar_path }} dest=/opt/intake24/tools/{{ dest_jar_name }}
 
 - name: Check if service is already running
   shell: systemctl is-active intake24-tools
@@ -23,7 +26,7 @@
   copy: src=intake24-tools.service dest=/lib/systemd/system/intake24-tools.service owner=root group=root mode=0644
 
 - name: Copy service config
-  template: src=config.j2 dest=/opt/intake24/tools/config mode=0664 owner=intake24-tools group=intake24
+  template: src={{ config_file_name }} dest=/opt/intake24/tools/service.conf mode=0664 owner=intake24-tools group=intake24
 
 - name: Copy start-up script
   template: src=start.sh.j2 dest=/opt/intake24/tools/start.sh mode=0775
