@@ -319,7 +319,7 @@ Set the host names and ports in the following fields:
 - `app.http_port`
 - `app.http_address`
 - `app.api_base_url` (the API server's URL prefix as configured in section 5)
-- `app.recaptcha_site_key` - set to the public key given in the `Client side integration` section on Google reCAPTCHA's admin page
+- `app.recaptcha.site_key` - set to the public key given in the `Client side integration` section on Google reCAPTCHA's admin page
 
 From the deployment repository root run:
 
