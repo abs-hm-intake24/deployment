@@ -1,0 +1,8 @@
+{
+  "source_jar_path": "",
+  "dest_jar_name": "intake24-api-v2.jar",
+
+  "config_file_name":  "../instances/{{intake24_instance_name}}/api-server-v2/service.conf",
+  "java_memory_initial": "32m",
+  "java_memory_max": "128m"
+}

@@ -1,0 +1,15 @@
+[Unit]
+Description=Intake24 API server v2
+After=syslog.target
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=intake24-api-v2
+Group=intake24
+ExecStart=/bin/bash /opt/intake24/api-v2/start.sh
+WorkingDirectory=/opt/intake24/api-v2
+
+[Install]
+WantedBy=multi-user.target

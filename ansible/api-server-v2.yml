@@ -3,4 +3,4 @@
   remote_user: deploy
   become: true
   roles:
-    - tools-service
+    - api-server-v2
