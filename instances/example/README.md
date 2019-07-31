@@ -143,11 +143,22 @@ The Intake24 API server is mostly written in Scala and runs on the JVM.
 
 #### 5.1 Install build dependencies
 
+##### 5.1.1. Java Development Kit (JDK)
+
 Intake24 must currently be built using JDK 8. To install it run:
 
     sudo apt-get install openjdk-8-jdk-headless
+    
+**Warning**: due to [recent changes to Oracle's support strategy for the Java platform](https://www.oracle.com/technetwork/java/javase/overview/oracle-jdk-faqs.html) 
+Oracle is no longer going to provide updates to older JDK versions. The above command will typically install 
+an OpenJDK 8 distribution provided by the OS maintainers but it is no longer possible to ensure what exact version
+is going to be installed.
 
-Intake24 uses the [SBT](https://scala-sbt.org) build tool. To install it run the 
+**It is highly recommended to use a JDK distribution from [AdoptOpenJDK](https://adoptopenjdk.net/) instead.** 
+
+
+##### 5.1.2. Scala Build Tool (SBT)
+Intake24 API project uses the [SBT](https://scala-sbt.org) build tool. To install it run the 
 following command from root of the deployment repository:
 
     sudo ./build-deps/install-sbt.sh
@@ -155,16 +166,27 @@ following command from root of the deployment repository:
 This will add the official SBT binary repository to the system software sources 
 and install the latest version of SBT.
 
-#### 5.2. Clone the Intake24 API server repository
+##### 5.1.3. Gradle build tool
 
-Clone the Intake24 API repository to a separate directory. **Do not clone it 
+Intake24 API v2 project uses [Gradle](https://docs.gradle.org/current/userguide/installation.html). Please refer to 
+the tool's website for installation instructions.
+
+#### 5.2. Clone the Intake24 API server repositories
+
+Clone the main Intake24 API repository to a separate directory. **Do not clone it 
 inside the deployment repository directory structure**:
 
     git clone --recurse-submodules -j8 https://github.com/intake24/api-server
+    
+Clone the Intake24 API v2 repository:
 
-#### 5.3. Build the Intake24 API server and related services
+    git clone https://github.com/intake24/api-v2
 
-From the root of the Intake24 API server repository run:
+#### 5.3. Build the Intake24 API servers and related services
+
+##### 5.3.1. API v1 server
+
+From the root of the Intake24 API server (`api-server`) repository run:
 
     sbt "apiPlayServer/debian:packageBin" "dataExportService/debian:packageBin"
 
@@ -174,17 +196,30 @@ and your Internet connection).
 
 Following builds will be much faster.
 
+##### 5.3.2. API v2 server
+
+The API v2 server build process requires access to an instance of Intake24 SQL database in order to examine the 
+database schema and generate the Java definitions for database objects using [jOOQ](https://www.jooq.org/).
+
+In the root of the API v2 project (`api-v2`) repository copy `gradle.properties.example` to `gradle.properties`.
+Edit the `gradle.properties` file and set the database connection properties to point to a local instance 
+of the Intake24 database.
+
+Then run
+
+    gradle :ApiServer:shadowJar
+
+Which will produce a file called `api-v2/APIServer/build/libs/intake24-api-v2-(version)-all.jar`. Note the full path to 
+that file to use in the deployment script. 
+
 #### 5.4. Install and configure JDK on the server
 
 From the root of the deployment repository run:
 
      ./configure-java (instance name)
 
-Make sure that the `openjdk-8-jre-headless` package is available on the server. 
-It is not available by default on e.g. Ubuntu Server 18.04. To enable it, run 
-the following command on the server:
-
-    sudo add-apt-repository universe
+This command will install and configure Java Runtime Environment version 8 from 
+[AdoptOpenJDK](https://adoptopenjdk.net/).
 
 #### 5.5. Prepare the API server configuration files
 
@@ -199,12 +234,18 @@ and looks like this: `zV;3:xvweW]@G5JTK7j;At<;pSj:NM=g[ALNpj?[NiWoUu3jK;K@s^a/LP
 and paste it into `instances/(instance name)/play-shared/http-secret.conf` in the 
 deployment repository.
 
+Paste the same key into the `authentication.jwtSecret` field in 
+`instances/(instance name)/api-server-v2/service.conf`.
+
 ##### 5.5.2. Set up database connection URLs
 
 Edit `instances/(instance name)/play-shared/databases.conf` and adjust PostgreSQL 
 connection URLs if required. 
 
 The default `localhost` URLs should work for a simple single server set up.
+
+Edit `instances/(instance name)/api-server-v2/service.conf` and update the database 
+connection URLs as above. 
 
 ##### 5.5.3. Enter the SMTP details
 
@@ -215,6 +256,8 @@ If left in mock mode the e-mail notifications can be found in the server's logs
 (e.g. `journalctl -u intake24-api-server`).
 
 ##### 5.5.4. Edit application configuration
+
+##### 5.5.4.1 API v1 server
 
 Edit `instances/(instance name)/api-server/application.conf` and change the 
 following:
@@ -246,7 +289,22 @@ Default setup uses AWS S3 storage to access image database. Refer to
 [Using local portion size image database](https://github.com/intake24/api-server/wiki/Using-local-portion-size-image-database)
 to serve image files locally.
 
+##### 5.5.4.2 API v2 server
+
+Edit `instances/(instance name)/api-server-v2/service.conf` and change the 
+following:
+
+- Set `authentication.jwtSecret` to the shared JWT signing key (see 5.5.1)
+
+- (If using local file storage) Set `secureURL.local.directory` to the path where downloadable files should be stored,
+e.g. `/opt/intake24/api-v2/local-files` 
+
+- (If using local file storage) Set `secureURL.local.downloadURLPrefix` to a publicly accessible API v2 server URL,
+e.g. `https://api.intake24.co.uk/v2/files` 
+
 ##### 5.5.5. Edit build paths and JVM configuration
+
+##### 5.5.5.1. API v1 server
 
 Edit `instances/(instance name)/api-server/play-app.json`:
 
@@ -264,17 +322,26 @@ produced by step 5.3. It can be found at
 
 - (Optional) change the JVM memory settings as needed
 
+##### 5.5.5.2. API v2 server
+
+Edit `instances/(instance name)/api-server-v2/config.json`:
+
+- Set `source_jar_path` to point to the JAR file produced by step 5.3.2
+
+- (Optional) change the JVM memory settings as needed 
+  
 #### 5.6. Applying database migrations
 
 - this step can be skipped if you have latest databases snapshots
-- to apply database migration, refer to [Applying database migrations](https://github.com/intake24/api-server/wiki/Applying-database-migrations)
+- to apply a database migration, refer to [Applying database migrations](https://github.com/intake24/api-v2/wiki/Applying-database-migrations)
 
-#### 5.7. Install the API server
+#### 5.7. Install the API server services
 
 From the deployment repository root run:
 
     ./api-server.sh (instance name)
     ./data-export-service.sh (instance name)
+    ./api-server-v2.sh (instance name)
 
 #### 5.8. Install nginx proxy for the API server
 
