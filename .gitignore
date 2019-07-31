@@ -1,3 +1,4 @@
 instances/*
 !instances/example
 *.retry
+.idea
