@@ -1,7 +1,0 @@
-{
-  "nginx_site": {
-     "host_name": "192.168.1.1:8000",
-     "config_file": "../instances/{{intake24_instance_name}}/survey-site/nginx-site",
-     "copy_ssl_certificate": false
-  }
-}
