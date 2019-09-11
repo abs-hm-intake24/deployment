@@ -31,5 +31,10 @@
 - name: Copy start-up script
   template: src=start.sh.j2 dest=/opt/intake24/api-v2/start.sh mode=0775
 
+- name: Enable service
+  service:
+    name: intake24-api-v2
+    enabled: yes
+
 - name: Restart service to apply configuration changes
   service: name=intake24-api-v2 state=restarted
