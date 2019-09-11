@@ -1,0 +1,79 @@
+- name: Create/check intake24 group
+  group: name=intake24 state=present
+
+- name: Create/check intake24-tasks user
+  user: name=intake24-tasks group=intake24
+
+- name: Install OS dependencies (git / nodejs / npm)
+  apt:
+    update-cache: yes
+    cache_valid_time: 86400
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - git
+    - nodejs
+    - npm
+
+- name: Create/check .ssh directory for intake24-tasks
+  file: name=/home/intake24-tasks/.ssh state=directory owner=intake24-tasks group=intake24 mode=0700
+
+- name: Copy ssh config for gitlab access
+  copy: src={{ item }} dest=/home/intake24-tasks/.ssh/ owner=intake24-tasks group=intake24 mode=0600
+  when: git.ssh is defined
+  with_items:
+    - "{{ git.ssh }}"
+
+- name: Create/check application directory
+  file: path={{ app.directory }} state=directory owner=intake24-tasks group=intake24
+
+- name: Checkout source from git repository
+  become_user: "intake24-tasks"
+  git:
+    repo: "{{ git.repository }}"
+    dest: "{{ app.directory }}"
+    version: "{{ git.branch }}"
+    force: yes
+    accept_hostkey: true
+
+- name: Install npm package dependencies
+  become_user: "intake24-tasks"
+  command: npm install
+  args:
+    chdir: "{{ app.directory }}"
+
+- name: Prepare dotenv file
+  become_user: "intake24-tasks"
+  template: src=.env dest={{ app.directory }}/.env
+
+- name: Prepare config file
+  become_user: "intake24-tasks"
+  template: src=config.js.j2 dest={{ app.directory }}/src/config/index.js
+
+- name: Build intake24-tasks project
+  become_user: "intake24-tasks"
+  command: npm run production
+  args:
+    chdir: "{{ app.directory }}"
+
+- name: Check if service is already running
+  shell: systemctl is-active intake24-tasks
+  register: service_active
+  failed_when: false
+
+- name: Stop service if already running
+  service: name=intake24-tasks state=stopped
+  when: service_active.rc == 0
+
+- name: Copy systemd service file
+  copy: src=intake24-tasks.service dest=/etc/systemd/system/intake24-tasks.service owner=root group=root mode=0644
+
+- name: Enable service
+  service:
+    name: intake24-tasks
+    enabled: yes
+
+- name: Restart service to apply configuration changes
+  service:
+    name: intake24-tasks
+    state: restarted

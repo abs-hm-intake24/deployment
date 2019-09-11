@@ -1,0 +1,13 @@
+[Unit]
+Description=Intake24 Tasks Service
+
+[Service]
+User=intake24-tasks
+Group=intake24
+Restart=always
+KillSignal=SIGQUIT
+WorkingDirectory=/usr/share/intake24-tasks
+ExecStart=/usr/bin/nodejs dist/index.js
+
+[Install]
+WantedBy=multi-user.target
