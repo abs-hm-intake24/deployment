@@ -1,0 +1,7 @@
+- name: Make sure local images directory exists
+  file:
+    path: "{{ play_app.local_images_path }}"
+    state: directory
+    owner: intake24-api-server
+    group: intake24-api-server
+    recurse: yes
