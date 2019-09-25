@@ -1,8 +1,12 @@
 - name: Create/check intake24 group
-  group: name=intake24 state=present
+  group:
+    name: intake24
+    state: present
 
 - name: Create/check intake24-tasks user
-  user: name=intake24-tasks group=intake24
+  user:
+    name: intake24-tasks
+    group: intake24
 
 - name: Install OS dependencies (git / nodejs / npm)
   apt:
@@ -16,16 +20,28 @@
     - npm
 
 - name: Create/check .ssh directory for intake24-tasks
-  file: name=/home/intake24-tasks/.ssh state=directory owner=intake24-tasks group=intake24 mode=0700
+  file:
+    name: "{{ git.ssh.dest }}"
+    state: directory
+    owner: intake24-tasks
+    group: intake24
+    mode: 0700
 
 - name: Copy ssh config for gitlab access
-  copy: src={{ item }} dest=/home/intake24-tasks/.ssh/ owner=intake24-tasks group=intake24 mode=0600
-  when: git.ssh is defined
-  with_items:
-    - "{{ git.ssh }}"
+  copy:
+    src: "{{ git.ssh.source }}/"
+    dest: "{{ git.ssh.dest }}/"
+    owner: intake24-tasks
+    group: intake24
+    mode: 0600
+  when: git.ssh.dest is defined
 
 - name: Create/check application directory
-  file: path={{ app.directory }} state=directory owner=intake24-tasks group=intake24
+  file:
+    path: "{{ app.directory }}"
+    state: directory
+    owner: intake24-tasks
+    group: intake24
 
 - name: Checkout source from git repository
   become_user: "intake24-tasks"
@@ -35,6 +51,11 @@
     version: "{{ git.branch }}"
     force: yes
     accept_hostkey: true
+
+- name: Clean ssh config for gitlab access
+  file:
+    path: "{{ git.ssh.dest }}/"
+    state: absent
 
 - name: Install npm package dependencies
   become_user: "intake24-tasks"
@@ -62,11 +83,18 @@
   failed_when: false
 
 - name: Stop service if already running
-  service: name=intake24-tasks state=stopped
+  service:
+    name: intake24-tasks
+    state: stopped
   when: service_active.rc == 0
 
 - name: Copy systemd service file
-  copy: src=intake24-tasks.service dest=/etc/systemd/system/intake24-tasks.service owner=root group=root mode=0644
+  copy:
+    src: intake24-tasks.service
+    dest: /etc/systemd/system/intake24-tasks.service
+    owner: root
+    group: root
+    mode: 0644
 
 - name: Enable service
   service:
