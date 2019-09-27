@@ -1,0 +1,12 @@
+[Service]
+ExecStart=/usr/bin/nodejs app.js
+WorkingDirectory=/usr/share/intake24-admin
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=intake24-admin
+User=intake24-admin
+Group=intake24-admin
+
+[Install]
+WantedBy=multi-user.target

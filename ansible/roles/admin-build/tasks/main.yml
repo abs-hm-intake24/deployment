@@ -1,0 +1,114 @@
+- name: Create user for intake24-admin service
+  user:
+    name: intake24-admin
+    comment: "Intake24 admin service"
+
+- name: Install OS dependencies (git / nodejs / npm)
+  apt:
+    update-cache: yes
+    cache_valid_time: 86400
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - git
+    - nodejs
+    - npm
+
+- name: Create/check .ssh directory for intake24-admin
+  file:
+    name: "{{ git.ssh.dest }}"
+    state: directory
+    owner: intake24-admin
+    group: intake24-admin
+    mode: 0700
+
+- name: Copy ssh config for gitlab access
+  copy:
+    src: "{{ git.ssh.source }}/"
+    dest: "{{ git.ssh.dest }}/"
+    owner: intake24-admin
+    group: intake24-admin
+    mode: 0600
+  when: git.ssh.dest is defined
+
+- name: Create/check application directory
+  file:
+    path: "{{ app.directory }}"
+    state: directory
+    owner: intake24-admin
+    group: intake24-admin
+
+- name: Checkout source from git repository
+  become_user: "intake24-admin"
+  git:
+    repo: "{{ git.repository_url }}"
+    dest: "{{ app.directory }}"
+    version: "{{ git.branch_name }}"
+    force: yes
+    accept_hostkey: true
+
+- name: Clean ssh config for gitlab access
+  file:
+    path: "{{ git.ssh.dest }}/"
+    state: absent
+
+- name: Install npm package dependencies
+  become_user: "intake24-admin"
+  command: npm install
+  args:
+    chdir: "{{ app.directory }}"
+
+- name: Create Grunt build config
+  become_user: intake24-admin
+  template: src=config.json.j2 dest={{ app.directory }}/config.json
+
+- name: Build Intake24 admin tool
+  become_user: intake24-admin
+  command: ./node_modules/grunt/bin/grunt --config=config.json
+  args:
+    chdir: "{{ app.directory }}"
+
+- name: Bind only to local interface
+  become_user: intake24-admin
+  lineinfile: dest={{ app.directory }}/app.js regexp="^app.listen"  line="app.listen({{ app.http_port }}, '{{ app.http_address }}');"
+
+- name: Make sure i18n directory exists
+  become_user: intake24-admin
+  file:
+    name: "{{app.directory}}/public/i18n"
+    state: directory
+    owner: intake24-admin
+    group: intake24-admin
+
+- name: Build message files
+  become_user: intake24-admin
+  command: ./node_modules/i18n-abide/bin/compile-json locale public/i18n
+  args:
+      chdir: "{{ app.directory }}"
+
+- name: Check if service is already running
+  shell: systemctl is-active intake24-admin
+  register: service_active
+  failed_when: false
+
+- name: Stop service if already running
+  service:
+    name: intake24-admin
+    state: stopped
+  when: service_active.rc == 0
+
+- name: Copy systemd service
+  copy:
+    src: intake24-admin.service
+    dest: /etc/systemd/system/intake24-admin.service
+    mode: 0600
+
+- name: Enable service
+  service:
+    name: intake24-admin
+    enabled: yes
+
+- name: Restart service to apply configuration changes
+  service:
+    name: intake24-admin
+    state: restarted
