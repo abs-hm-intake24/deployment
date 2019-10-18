@@ -1,18 +1,15 @@
 - name: Copy systemd service
-  become: yes
   template:
     src: admin.service.j2
     dest: /etc/systemd/system/{{ app.name }}.service
     mode: 0600
 
 - name: Enable service
-  become: yes
   service:
     name: "{{ app.name }}"
     enabled: yes
 
 - name: Restart service to apply configuration changes
-  become: yes
   service:
     name: "{{ app.name }}"
     state: restarted

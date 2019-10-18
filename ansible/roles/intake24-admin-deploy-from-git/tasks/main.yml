@@ -1,5 +1,4 @@
 - name: Make sure Git is installed
-  become: yes
   apt:
     update-cache: yes
     cache_valid_time: 86400
@@ -7,7 +6,6 @@
     state: present
 
 - name: Make sure .ssh directory exists for intake24-admin
-  become: yes
   file:
     name: /home/{{ app.name }}/.ssh
     state: directory
@@ -15,7 +13,6 @@
     group: "{{ app.name }}"
 
 - name: Make sure application directory exists
-  become: yes
   file:
     path: "{{ app.directory }}"
     state: directory
@@ -23,11 +20,10 @@
     group: "{{ app.name }}"
 
 - name: Checkout source from Git repository
-  become: yes
   become_user: "{{ app.name }}"
   git:
     repo: "{{ git.repository_url }}"
-    dest: "{{ app.directory}}"
+    dest: "{{ app.directory }}"
     version: "{{ git.branch_name }}"
     force: yes
     accept_hostkey: true

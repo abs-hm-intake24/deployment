@@ -11,21 +11,18 @@
     - npm
 
 - name: Create Grunt build config
-  become: yes
   become_user: "{{ app.name }}"
   template:
     src: "config.json.j2"
     dest: "{{ app.directory }}/config.json"
 
 - name: Make sure npm package dependencies are installed
-  become: yes
   become_user: "{{ app.name }}"
   command: npm install
   args:
     chdir: "{{ app.directory }}"
 
 - name: Build Intake24 admin tool
-  become: yes
   become_user: "{{ app.name }}"
   command: ./node_modules/grunt/bin/grunt --config=config.json
   args:
@@ -39,7 +36,6 @@
     line: "app.listen({{ app.http_port }}, '{{ app.http_address }}');"
 
 - name: Make sure i18n directory exists
-  become: yes
   become_user: "{{ app.name }}"
   file:
     name: "{{ app.directory }}/public/i18n"
@@ -48,7 +44,6 @@
     group: "{{ app.name }}"
 
 - name: Build message files
-  become: yes
   become_user: "{{ app.name }}"
   command: ./node_modules/i18n-abide/bin/compile-json locale public/i18n
   args:

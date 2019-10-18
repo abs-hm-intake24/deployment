@@ -1,5 +1,4 @@
 - name: Create user for intake24-admin service
-  become: true
   user:
     name: "{{ app.name }}"
     comment: "Intake24 admin service"
