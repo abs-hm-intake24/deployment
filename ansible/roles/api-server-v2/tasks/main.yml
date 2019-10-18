@@ -28,6 +28,9 @@
   copy:
     src: "{{ source_jar_path }}"
     dest: "{{ dir }}/{{ dest_jar_name }}"
+    owner: "{{ username }}"
+    group: intake24
+    mode: 0644
 
 - name: Check if service is already running
   shell: systemctl is-active {{ username }}
@@ -60,7 +63,9 @@
   template:
     src: start.sh.j2
     dest: "{{ dir }}/start.sh"
-    mode: 0775
+    owner: "{{ username }}"
+    group: intake24
+    mode: 0755
 
 - name: Enable service
   service:
