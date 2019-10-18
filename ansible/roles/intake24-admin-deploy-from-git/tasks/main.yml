@@ -8,18 +8,26 @@
 
 - name: Make sure .ssh directory exists for intake24-admin
   become: yes
-  file: name=/home/intake24-admin/.ssh state=directory owner=intake24-admin group=intake24-admin
+  file:
+    name: /home/{{ app.name }}/.ssh
+    state: directory
+    owner: "{{ app.name }}"
+    group: "{{ app.name }}"
 
 - name: Make sure application directory exists
   become: yes
-  file: path={{ app.directory }} state=directory owner=intake24-admin group=intake24-admin
+  file:
+    path: "{{ app.directory }}"
+    state: directory
+    owner: "{{ app.name }}"
+    group: "{{ app.name }}"
 
 - name: Checkout source from Git repository
   become: yes
-  become_user: intake24-admin
+  become_user: "{{ app.name }}"
   git:
     repo: "{{ git.repository_url }}"
     dest: "{{ app.directory}}"
-    version: "{{git.branch_name}}"
+    version: "{{ git.branch_name }}"
     force: yes
     accept_hostkey: true

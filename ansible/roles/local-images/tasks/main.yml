@@ -2,6 +2,6 @@
   file:
     path: "{{ play_app.local_images_path }}"
     state: directory
-    owner: intake24-api-server
-    group: intake24-api-server
+    owner: "{{ play_app.name }}"
+    group: "{{ play_app.name }}"
     recurse: yes

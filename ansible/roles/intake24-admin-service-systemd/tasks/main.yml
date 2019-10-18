@@ -1,12 +1,18 @@
 - name: Copy systemd service
   become: yes
-  copy: src=intake24-admin.service dest=/etc/systemd/system/intake24-admin.service mode=0600
+  template:
+    src: admin.service.j2
+    dest: /etc/systemd/system/{{ app.name }}.service
+    mode: 0600
 
 - name: Enable service
+  become: yes
   service:
-    name: intake24-admin
+    name: "{{ app.name }}"
     enabled: yes
 
-- name: Start intake24-admin service
+- name: Restart service to apply configuration changes
   become: yes
-  service: name=intake24-admin state=restarted
+  service:
+    name: "{{ app.name }}"
+    state: restarted
