@@ -1,0 +1,11 @@
+- name: Create maintenance directory
+  file: name=/srv/maintenance state=directory
+
+- name: Copy maintenance page
+  copy: src=maintenance.html dest=/srv/maintenance/maintenance.html
+
+- name: Copy maintenance stylesheet
+  copy: src=errors.css dest=/srv/maintenance/errors.css
+
+- name: Copy logo
+  copy: src=logo.png dest=/srv/maintenance/logo.png

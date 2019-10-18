@@ -1,0 +1,8 @@
+---
+- hosts: maintenance
+  remote_user: deploy
+  become: true
+  roles:
+    - maintenance-assets
+    - nginx-site
+
