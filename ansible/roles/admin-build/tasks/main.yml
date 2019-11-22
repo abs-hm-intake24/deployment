@@ -3,7 +3,7 @@
     name: "{{ app.name }}"
     comment: "Intake24 admin service"
 
-- name: Install OS dependencies (git / nodejs / npm)
+- name: Install OS dependencies (git / nodejs)
   apt:
     update-cache: yes
     cache_valid_time: 86400
@@ -12,7 +12,6 @@
   with_items:
     - git
     - nodejs
-    - npm
 
 - name: Create/check .ssh directory for intake24-admin
   file:
