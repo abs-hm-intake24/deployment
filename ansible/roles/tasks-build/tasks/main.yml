@@ -90,7 +90,7 @@
 - name: Copy systemd service file
   copy:
     src: intake24-tasks.service
-    dest: /etc/systemd/system/intake24-tasks.service
+    dest: /lib/systemd/system/intake24-tasks.service
     owner: root
     group: root
     mode: 0644
