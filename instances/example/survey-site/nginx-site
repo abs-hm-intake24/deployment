@@ -1,0 +1,24 @@
+server {
+  listen 8000;
+  listen [::]:8000;
+  server_name 192.168.1.1;
+
+  client_max_body_size 1m;
+
+# rewrite ^/(.*)/$ /$1 permanent;
+  rewrite ^(/surveys/.*)/login $1 permanent;
+
+  location /demo {
+    return 301 http://$server_name/surveys/demo?genUser=1;
+  }
+
+  location /swap {
+    alias /home/deploy/swap;
+    index index.html;
+  }
+
+  location / {
+    proxy_pass http://localhost:8003/;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}

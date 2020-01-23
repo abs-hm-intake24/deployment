@@ -1,0 +1,21 @@
+{
+  "dumpCmd" : "/usr/bin/pg_dump",
+  "backupDir": "/home/deploy/intake24/backups",
+
+  "database": {
+    "name" : "intake24_foods_production",
+    "host": "db.intake24.co.uk",
+    "user": "intake24_backup_user",
+    "password": "<password>"
+  },
+
+  "encryption": {
+    "enabled": false
+  },
+
+  "s3": {
+    "bucket": "intake24",
+    "namePrefix": "backups/"
+  }
+
+}

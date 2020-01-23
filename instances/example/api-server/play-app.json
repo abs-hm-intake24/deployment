@@ -1,0 +1,19 @@
+{
+  "play_app": {
+    "debian_package_path": "/path/to/intake24/api-server/ApiPlayServer/target/intake24-api-server_3.30.1-SNAPSHOT_all.deb",
+    "name": "intake24-api-server",
+    "http_port": "6400",
+    "http_address": "localhost",
+    "java_memory_initial": "256m",
+    "java_memory_max": "512m",
+    "ehcache_max_size_in_bytes": "33554432",
+    "main_conf_file": "../instances/{{intake24_instance_name}}/api-server/application.conf",
+    "extra_conf_files": [
+      "../instances/{{intake24_instance_name}}/play-shared/http-secret.conf",
+      "../instances/{{intake24_instance_name}}/play-shared/play.mailer.conf",
+      "../instances/{{intake24_instance_name}}/play-shared/databases.conf"
+    ],
+    "logger_conf_file": "../instances/{{intake24_instance_name}}/api-server/logging.xml",
+    "local_images_path": "/var/www/intake24-images"
+  }
+}

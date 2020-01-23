@@ -1,0 +1,22 @@
+# All servers that require a JRE, that is the API server and the survey website.
+[java]
+host.name.tld
+
+# All servers that require nginx, that is all servers except the database server.
+[nginx]
+host.name.tld
+
+[database]
+host.name.tld
+
+[api-server]
+host.name.tld
+
+[survey-site]
+host.name.tld
+
+[admin-site]
+host.name.tld
+
+[tasks]
+host.name.tld
