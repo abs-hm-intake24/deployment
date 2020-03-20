@@ -4,5 +4,5 @@
   become: true
   roles:
     - imagemagick
-    - local-images
     - play-app
+    - local-images
