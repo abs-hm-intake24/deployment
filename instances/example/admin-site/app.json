@@ -8,10 +8,12 @@
     }
   },
   "app": {
+    "name": "intake24-admin",
     "directory": "/usr/share/intake24-admin",
     "http_port": "8002",
     "http_address": "192.168.1.1",
     "api_base_url": "http://192.168.1.1:8001/",
+    "helmet": {},
     "recaptcha": {
       "enabled": true,
       "site_key": ""

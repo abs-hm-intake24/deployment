@@ -65,7 +65,7 @@
 
 - name: Build Intake24 admin tool
   become_user: "{{ app.name }}"
-  command: ./node_modules/grunt/bin/grunt --config=config.json
+  command: npm run build
   args:
     chdir: "{{ app.directory }}"
 
@@ -86,7 +86,7 @@
 
 - name: Build message files
   become_user: "{{ app.name }}"
-  command: ./node_modules/i18n-abide/bin/compile-json locale public/i18n
+  command: npm run i18n
   args:
       chdir: "{{ app.directory }}"
 

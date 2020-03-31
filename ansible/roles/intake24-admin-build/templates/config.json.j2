@@ -1,6 +1,7 @@
 {
   "apiBaseUrl": "{{app.api_base_url}}",
   "recaptcha": {{ app.recaptcha | to_json }},
+  "helmet": {{ app.helmet | to_json }},
   "hideFoodDatabase" : {{app.hide_food_database | bool | lower}},
   "stylusFrom": "src/styl/style.styl",
   "stylusWatch": "src/styl/**/**",
