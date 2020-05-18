@@ -1,0 +1,5 @@
+{
+  "image_database_archive": "/path/to/images.zip",
+  "destination_directory": "/var/opt/intake24/images",
+  "image_database_owner":  "intake24-api-server"
+}

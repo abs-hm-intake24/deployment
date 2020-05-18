@@ -6,10 +6,10 @@
   "app": {
     "directory": "/usr/share/intake24-admin",
     "http_port": "8002",
-    "http_address": "192.168.1.1",
+    "http_address": "localhost",
     "api_base_url": "http://192.168.1.1:8001/",
     "recaptcha": {
-      "enabled": true,
+      "enabled": false,
       "site_key": ""
     },
     "hide_food_database": false

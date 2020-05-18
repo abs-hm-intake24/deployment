@@ -3,7 +3,7 @@
     "debian_package_path" : "/path/to/intake24/survey-frontend/SurveyServer/target/intake24-survey-site_3.0.0-SNAPSHOT_all.deb",
     "name": "intake24-survey-site",
     "http_port": "8003",
-    "http_address": "192.168.1.1",
+    "http_address": "localhost",
     "java_memory_initial": "64m",
     "java_memory_max": "256m",
     "ehcache_max_size_in_bytes": "33554432",
