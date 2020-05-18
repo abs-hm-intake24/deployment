@@ -10,3 +10,6 @@ Group=intake24-admin
 
 [Install]
 WantedBy=multi-user.target
+
+[Unit]
+After=network.target
