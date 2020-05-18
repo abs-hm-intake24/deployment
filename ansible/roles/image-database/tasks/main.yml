@@ -1,0 +1,16 @@
+- name: Make sure unzip is installed
+  apt: package=unzip state=present
+
+- name: Make sure image destination directory exists
+  file: 
+   path: "{{ destination_directory }}"
+   state: directory
+   owner: "{{ image_database_owner }}"
+   group: "{{ image_database_owner }}" 
+
+- name: Copy image database files
+  unarchive:
+    src: "{{ image_database_archive }}"
+    dest: "{{ destination_directory }}"
+    owner: "{{ image_database_owner }}"
+    group: "{{ image_database_owner }}"
