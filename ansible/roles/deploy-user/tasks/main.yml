@@ -1,11 +1,19 @@
 ---
-  - name: Create deploy user
-    user: name=deploy state=present groups=sudo shell=/bin/bash
-  - name: Add deploy key
-    authorized_key: user=deploy key="{{ lookup('file', deploy_user.ssh_public_key_path) }}"
-  - name: Add deploy users to sudoers
-    lineinfile: dest=/etc/sudoers line='deploy ALL=(ALL:ALL) NOPASSWD:ALL' regexp='^deploy ALL=' state=present
-  - name: Disable root login
-    lineinfile: dest=/etc/ssh/sshd_config line="PermitRootLogin no" regexp="^PermitRootLogin" state=present
-  - name: Restart sshd
-    service: name=ssh state=restarted
+- name: Wait up to 120 seconds for host to become reachable
+  wait_for_connection:
+    timeout: 120
+
+- name: Create deploy user
+  user: name=deploy state=present groups=sudo shell=/bin/bash
+
+- name: Add deploy key
+  authorized_key: user=deploy key="{{ lookup('file', deploy_user.ssh_public_key_path) }}"
+
+- name: Add deploy users to sudoers
+  lineinfile: dest=/etc/sudoers line='deploy ALL=(ALL:ALL) NOPASSWD:ALL' regexp='^deploy ALL=' state=present
+
+- name: Disable root login
+  lineinfile: dest=/etc/ssh/sshd_config line="PermitRootLogin no" regexp="^PermitRootLogin" state=present
+
+- name: Restart sshd
+  service: name=ssh state=restarted
