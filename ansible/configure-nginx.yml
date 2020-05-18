@@ -3,4 +3,5 @@
   remote_user: deploy
   become: true
   roles:
+    - wait-for-apt-lock
     - nginx

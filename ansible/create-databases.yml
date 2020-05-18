@@ -1,6 +1,7 @@
 ---
 - hosts: database
   roles:
+    - wait-for-apt-lock
     - { role: ANXS.postgresql,  become: true }
     - create-databases
 

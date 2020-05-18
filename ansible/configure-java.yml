@@ -3,6 +3,7 @@
   remote_user: deploy
   become: true
   roles:
+    - wait-for-apt-lock
     - jre8-adoptopenjdk
     - role: java-trustca
       when: java_options.add_internal_ca
