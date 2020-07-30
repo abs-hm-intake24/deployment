@@ -68,7 +68,7 @@
 
 - name: Prepare tasks config file
   become_user: "intake24-tasks"
-  template: src=tasks.js.j2 dest={{ app.directory }}/src/config/tasks.js
+  template: src=tasks.ts.j2 dest={{ app.directory }}/src/config/tasks.ts
 
 - name: Build intake24-tasks project
   become_user: "intake24-tasks"
