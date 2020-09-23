@@ -1,0 +1,7 @@
+- name: Make sure local images directory exists
+  file:
+    path: "{{ play_app.local_images_path }}"
+    state: directory
+    owner: "{{ play_app.name }}"
+    group: "{{ play_app.name }}"
+    recurse: yes

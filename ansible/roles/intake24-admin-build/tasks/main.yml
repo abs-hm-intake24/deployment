@@ -4,44 +4,46 @@
   args:
     update-cache: yes
     cache_valid_time: 86400
-    name: "{{item}}"
+    name: "{{ item }}"
     state: present
   with_items:
     - nodejs
-    - npm
 
 - name: Create Grunt build config
-  become: yes
-  become_user: intake24-admin
-  template: src=config.json.j2 dest={{app.directory}}/config.json
+  become_user: "{{ app.name }}"
+  template:
+    src: "config.json.j2"
+    dest: "{{ app.directory }}/config.json"
 
 - name: Make sure npm package dependencies are installed
-  become: yes
-  become_user: intake24-admin
+  become_user: "{{ app.name }}"
   command: npm install
   args:
-    chdir: "{{app.directory}}"
+    chdir: "{{ app.directory }}"
 
 - name: Build Intake24 admin tool
-  become: yes
-  become_user: intake24-admin
-  command: ./node_modules/grunt/bin/grunt --config=config.json
+  become_user: "{{ app.name }}"
+  command: npm run build
   args:
-    chdir: "{{app.directory}}"
+    chdir: "{{ app.directory }}"
 
 - name: Bind only to local interface
-  become: yes
-  become_user: intake24-admin
-  lineinfile: dest={{app.directory}}/app.js regexp="^app.listen"  line="app.listen({{app.http_port}}, '{{app.http_address}}');"
+  become_user: "{{ app.name }}"
+  lineinfile:
+    dest: "{{ app.directory }}/app.js"
+    regexp: "^app.listen"
+    line: "app.listen({{ app.http_port }}, '{{ app.http_address }}');"
 
 - name: Make sure i18n directory exists
-  become: yes
-  become_user: intake24-admin
-  file: name={{app.directory}}/public/i18n state=directory owner=intake24-admin group=intake24-admin
+  become_user: "{{ app.name }}"
+  file:
+    name: "{{ app.directory }}/public/i18n"
+    state: directory
+    owner: "{{ app.name }}"
+    group: "{{ app.name }}"
 
 - name: Build message files
-  become: yes
-  become_user: intake24-admin
-  command: ./node_modules/i18n-abide/bin/compile-json locale public/i18n
+  become_user: "{{ app.name }}"
+  command: npm run i18n
   args:
-      chdir: "{{app.directory}}"
+      chdir: "{{ app.directory }}"

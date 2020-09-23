@@ -5,3 +5,4 @@
   roles:
     - imagemagick
     - play-app
+    - local-images

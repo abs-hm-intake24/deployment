@@ -1,0 +1,12 @@
+[Service]
+ExecStart=/usr/bin/nodejs app.js
+WorkingDirectory={{ app.directory }}
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier={{ app.name }}
+User={{ app.name }}
+Group={{ app.name }}
+
+[Install]
+WantedBy=multi-user.target

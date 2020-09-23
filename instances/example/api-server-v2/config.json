@@ -1,4 +1,6 @@
 {
+  "username": "intake24-api-v2",
+  "dir": "/opt/intake24/api-v2",
   "source_jar_path": "",
   "dest_jar_name": "intake24-api-v2.jar",
 

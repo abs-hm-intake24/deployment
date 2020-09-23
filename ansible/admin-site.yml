@@ -1,6 +1,7 @@
 ---
 - hosts: admin-site
   remote_user: deploy
+  become: true
   roles:
     - intake24-admin-user
     - intake24-admin-deploy-from-git

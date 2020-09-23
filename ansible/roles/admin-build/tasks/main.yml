@@ -1,0 +1,118 @@
+- name: Create user for intake24-admin service
+  user:
+    name: "{{ app.name }}"
+    comment: "Intake24 admin service"
+
+- name: Install OS dependencies (git / nodejs)
+  apt:
+    update-cache: yes
+    cache_valid_time: 86400
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - git
+    - nodejs
+
+- name: Create/check .ssh directory for intake24-admin
+  file:
+    name: "{{ git.ssh.dest }}"
+    state: directory
+    owner: "{{ app.name }}"
+    group: "{{ app.name }}"
+    mode: 0700
+
+- name: Copy ssh config for gitlab access
+  copy:
+    src: "{{ git.ssh.source }}/"
+    dest: "{{ git.ssh.dest }}/"
+    owner: "{{ app.name }}"
+    group: "{{ app.name }}"
+    mode: 0600
+  when: git.ssh.dest is defined
+
+- name: Create/check application directory
+  file:
+    path: "{{ app.directory }}"
+    state: directory
+    owner: "{{ app.name }}"
+    group: "{{ app.name }}"
+
+- name: Checkout source from git repository
+  become_user: "{{ app.name }}"
+  git:
+    repo: "{{ git.repository_url }}"
+    dest: "{{ app.directory }}"
+    version: "{{ git.branch_name }}"
+    force: yes
+    accept_hostkey: true
+
+- name: Clean ssh config for gitlab access
+  file:
+    path: "{{ git.ssh.dest }}/"
+    state: absent
+
+- name: Install npm package dependencies
+  become_user: "{{ app.name }}"
+  command: npm install
+  args:
+    chdir: "{{ app.directory }}"
+
+- name: Create Grunt build config
+  become_user: "{{ app.name }}"
+  template:
+    src: config.json.j2
+    dest: "{{ app.directory }}/config.json"
+
+- name: Build Intake24 admin tool
+  become_user: "{{ app.name }}"
+  command: npm run build
+  args:
+    chdir: "{{ app.directory }}"
+
+- name: Bind only to local interface
+  become_user: "{{ app.name }}"
+  lineinfile:
+    dest: "{{ app.directory }}/app.js"
+    regexp: "^app.listen"
+    line: "app.listen({{ app.http_port }}, '{{ app.http_address }}');"
+
+- name: Make sure i18n directory exists
+  become_user: "{{ app.name }}"
+  file:
+    name: "{{ app.directory }}/public/i18n"
+    state: directory
+    owner: "{{ app.name }}"
+    group: "{{ app.name }}"
+
+- name: Build message files
+  become_user: "{{ app.name }}"
+  command: npm run i18n
+  args:
+      chdir: "{{ app.directory }}"
+
+- name: Check if service is already running
+  shell: systemctl is-active "{{ app.name }}"
+  register: service_active
+  failed_when: false
+
+- name: Stop service if already running
+  service:
+    name: "{{ app.name }}"
+    state: stopped
+  when: service_active.rc == 0
+
+- name: Copy systemd service
+  template:
+    src: admin.service.j2
+    dest: /etc/systemd/system/{{ app.name }}.service
+    mode: 0600
+
+- name: Enable service
+  service:
+    name: "{{ app.name }}"
+    enabled: yes
+
+- name: Restart service to apply configuration changes
+  service:
+    name: "{{ app.name }}"
+    state: restarted

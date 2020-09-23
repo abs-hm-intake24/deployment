@@ -18,4 +18,5 @@ host.name.tld
 [admin-site]
 host.name.tld
 
-
+[tasks]
+host.name.tld

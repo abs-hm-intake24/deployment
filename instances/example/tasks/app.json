@@ -1,0 +1,38 @@
+{
+  "git": {
+    "repository": "",
+    "branch": "master",
+    "ssh": {
+      "source": "../instances/{{intake24_instance_name}}/ssh/gitlab",
+      "dest": "/home/intake24-tasks/.ssh"
+    }
+  },
+  "app": {
+    "directory": "/usr/share/intake24-tasks",
+    "api": {
+      "it24": {
+        "url": "",
+        "username": "",
+        "password": ""
+      }
+    },
+    "db": {
+      "it24": {
+        "url": ""
+      },
+      "epid": {
+        "server": "",
+        "username": "",
+        "password": "",
+        "database": ""
+      }
+    },
+    "tasks": [
+      {
+        "name": "EXPORT_SURVEY_DATA",
+        "cron": "*/5 * * * *",
+        "params": ["survey_name"]
+      }
+    ]
+  }
+}

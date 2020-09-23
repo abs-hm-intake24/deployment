@@ -1,15 +1,15 @@
 [Unit]
-Description=Intake24 API server v2
+Description={{ username }}
 After=syslog.target
 After=network.target
 Wants=network.target
 
 [Service]
 Type=simple
-User=intake24-api-v2
+User={{ username }}
 Group=intake24
-ExecStart=/bin/bash /opt/intake24/api-v2/start.sh
-WorkingDirectory=/opt/intake24/api-v2
+ExecStart=/bin/bash {{ dir }}/start.sh
+WorkingDirectory={{ dir }}
 
 [Install]
 WantedBy=multi-user.target

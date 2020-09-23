@@ -1,13 +1,19 @@
 {
   "git": {
     "repository_url": "https://github.com/intake24/admin-frontend.git",
-    "branch_name": "master"
+    "branch_name": "master",
+    "ssh": {
+      "source": "../instances/{{intake24_instance_name}}/ssh/gitlab",
+      "dest": "/home/intake24-admin/.ssh"
+    }
   },
   "app": {
+    "name": "intake24-admin",
     "directory": "/usr/share/intake24-admin",
     "http_port": "8002",
     "http_address": "localhost",
     "api_base_url": "http://192.168.1.1:8001/",
+    "helmet": {},
     "recaptcha": {
       "enabled": false,
       "site_key": ""

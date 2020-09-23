@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "nginx_site": {
      "host_name": "intake24-api-server",
@@ -5,3 +6,12 @@
      "copy_ssl_certificate": false
   }
 }
+=======
+{
+  "nginx_site": {
+     "host_name": "192.168.1.1:8001",
+     "config_file": "../instances/{{intake24_instance_name}}/api-server/nginx-site",
+     "copy_ssl_certificate": false
+  }
+}
+>>>>>>> mrc-github/master
