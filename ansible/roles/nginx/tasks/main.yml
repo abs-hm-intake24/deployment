@@ -1,9 +1,8 @@
 ---
 - name: Install nginx
-  action: apt pkg={{ item }} state=latest
+  yum: pkg=nginx state=latest
+  when: ansible_os_family == "RedHat"
   become: yes
-  with_items:
-   - nginx
 
 - name: Generate Diffie-Helmann parameters 
   become: yes

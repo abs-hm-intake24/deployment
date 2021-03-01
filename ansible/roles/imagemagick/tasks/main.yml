@@ -1,3 +1,4 @@
 - name: Make sure ImageMagick is installed
-  apt: pkg=imagemagick state=latest
+  yum: pkg=ImageMagick state=installed
+  when: ansible_os_family == "RedHat"
   become: true

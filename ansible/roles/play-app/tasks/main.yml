@@ -1,5 +1,5 @@
-- name: Copy .deb package
-  copy: src={{ play_app.debian_package_path }} dest=/home/deploy/{{ play_app.name }}.deb
+- name: Copy .rpm package
+  copy: src={{ play_app.rpm_package_path }} dest=/home/deploy/{{ play_app.name }}.rpm
 
 - name: Check if the service is already running
   shell: systemctl is-active {{ play_app.name }}
@@ -13,8 +13,8 @@
 - name: Remove RUNNING_PID file
   file: path=/var/run/{{play_app.name}}/play.pid state=absent
 
-- name: Install .deb
-  command: dpkg -i --force-confnew /home/deploy/{{play_app.name}}.deb
+- name: install .rpm
+  command: rpm --force -i /home/deploy/{{play_app.name}}.rpm
 
 - name: Copy application.conf
   copy: src={{play_app.main_conf_file}} dest=/usr/share/{{play_app.name}}/conf/application.conf mode=0644

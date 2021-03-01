@@ -1,13 +1,34 @@
-- name: Make sure Node.js and npm are installed
-  become: yes
-  action: apt
-  args:
-    update-cache: yes
-    cache_valid_time: 86400
-    name: "{{ item }}"
+- name: Set nodejs version
+  set_fact:
+    nodejs_version: "10.x"
+
+- name: Set up the Nodesource RPM directory.
+  set_fact:
+    nodejs_rhel_rpm_dir: "pub_{{ nodejs_version }}"
+
+- name: Import Nodesource RPM key
+  rpm_key:
+    key: https://rpm.nodesource.com/pub/el/NODESOURCE-GPG-SIGNING-KEY-EL
     state: present
-  with_items:
-    - nodejs
+
+- name: Add Nodesource repositories for Node.js
+  yum:
+    name: "http://rpm.nodesource.com/{{ nodejs_rhel_rpm_dir }}/el/{{ ansible_distribution_major_version }}/{{ ansible_architecture }}/nodesource-release-el{{ ansible_distribution_major_version }}-1.noarch.rpm"
+    state: present
+
+- name: Remove old npm version
+  yum: 
+    name: npm
+    state: absent
+
+- name: Make sure Node.js and npm are installed
+  yum:
+    name: "nodejs-{{ nodejs_version|regex_replace('x', '') }}*"
+    state: present
+    enablerepo: nodesource
+
+- name: Create a symlink between nodejs and node
+  file: src=/usr/bin/node dest=/usr/bin/nodejs state=link
 
 - name: Create Grunt build config
   become_user: "{{ app.name }}"

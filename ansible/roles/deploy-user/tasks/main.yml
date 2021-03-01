@@ -4,7 +4,7 @@
     timeout: 120
 
 - name: Create deploy user
-  user: name=deploy state=present groups=sudo shell=/bin/bash
+  user: name=deploy state=present groups=wheel shell=/bin/bash
 
 - name: Add deploy key
   authorized_key: user=deploy key="{{ lookup('file', deploy_user.ssh_public_key_path) }}"
@@ -16,4 +16,4 @@
   lineinfile: dest=/etc/ssh/sshd_config line="PermitRootLogin no" regexp="^PermitRootLogin" state=present
 
 - name: Restart sshd
-  service: name=ssh state=restarted
+  service: name=sshd state=restarted

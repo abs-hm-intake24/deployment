@@ -3,6 +3,6 @@
   roles:
     - wait-for-apt-lock
     - { role: ANXS.postgresql,  become: true }
-    - create-databases
+    - { role: create-databases, become: true, become_user: deploy }	
 
 
