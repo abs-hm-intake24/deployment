@@ -1,0 +1,71 @@
+- name: Set nodejs version ================================================== yum
+  set_fact:
+    nodejs_version: "10.x"
+
+- name: Set the Nodesource RPM directory.
+  set_fact:
+    nodejs_rhel_rpm_dir: "pub_{{ nodejs_version }}"
+
+- name: Import Nodesource RPM key
+  rpm_key:
+    key: https://rpm.nodesource.com/pub/el/NODESOURCE-GPG-SIGNING-KEY-EL
+    state: present
+
+- name: Add Nodesource repositories for Node.js
+  yum:
+    name: "http://rpm.nodesource.com/{{ nodejs_rhel_rpm_dir }}/el/{{ ansible_distribution_major_version }}/{{ ansible_architecture }}/nodesource-release-el{{ ansible_distribution_major_version }}-1.noarch.rpm"
+    state: present
+
+- name: Remove old npm version
+  yum:
+    name: npm
+    state: absent
+
+- name: Make sure Node.js and npm are installed
+  yum:
+    name: "nodejs-{{ nodejs_version|regex_replace('x', '') }}*"
+    state: present
+    enablerepo: nodesource
+
+- name: Create a symlink between nodejs and node
+  file: src=/usr/bin/node dest=/usr/bin/nodejs state=link
+
+- name: Create Grunt build config
+  become_user: "{{ app.name }}"
+  template:
+    src: "config.json.j2"
+    dest: "{{ app.directory }}/config.json"
+
+- name: Make sure npm package dependencies are installed
+  become_user: "{{ app.name }}"
+  command: npm install
+  args:
+    chdir: "{{ app.directory }}"
+
+- name: Build Intake24 admin tool
+  become_user: "{{ app.name }}"
+  command: npm run build
+  args:
+    chdir: "{{ app.directory }}"
+
+- name: Bind only to local interface
+  become_user: "{{ app.name }}"
+  lineinfile:
+    dest: "{{ app.directory }}/app.js"
+    regexp: "^app.listen"
+    line: "app.listen({{ app.http_port }}, '{{ app.http_address }}');"
+
+- name: Make sure i18n directory exists
+  become_user: "{{ app.name }}"
+  file:
+    name: "{{ app.directory }}/public/i18n"
+    state: directory
+    owner: "{{ app.name }}"
+    group: "{{ app.name }}"
+
+- name: Build message files
+  become_user: "{{ app.name }}"
+  command: npm run i18n
+  args:
+      chdir: "{{ app.directory }}"
+
