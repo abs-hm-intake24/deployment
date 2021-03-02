@@ -1,42 +1,5 @@
-- name: Copy .rpm package
-  copy: src={{ play_app.rpm_package_path }} dest=/home/deploy/{{ play_app.name }}.rpm
+- import_tasks: play_app_apt.yml
+  when: ansible_pkg_mgr == "apt"
 
-- name: Check if the service is already running
-  shell: systemctl is-active {{ play_app.name }}
-  register: service_active
-  failed_when: false
-
-- name: Stop service if already running
-  service: name={{play_app.name}} state=stopped
-  when: service_active.rc == 0
-
-- name: Remove RUNNING_PID file
-  file: path=/var/run/{{play_app.name}}/play.pid state=absent
-
-- name: install .rpm
-  command: rpm --force -i /home/deploy/{{play_app.name}}.rpm
-
-- name: Copy application.conf
-  copy: src={{play_app.main_conf_file}} dest=/usr/share/{{play_app.name}}/conf/application.conf mode=0644
-
-- name: Copy extra config files
-  copy: src={{item}} dest=/usr/share/{{play_app.name}}/conf/ mode=0644
-  when: play_app.extra_conf_files is defined
-  with_items:
-    - "{{play_app.extra_conf_files}}"
-
-- name: Copy logger configuration
-  copy: src={{play_app.logger_conf_file}} dest=/usr/share/{{play_app.name}}/conf/logger.xml mode=0644
-
-- name: Copy ehcache configuration
-  template: src=ehcache.xml.j2 dest=/usr/share/{{play_app.name}}/conf/ehcache.xml mode=0644
-
-- name: Copy environment file
-  copy: src={{play_app.environment_file}} dest=/etc/default/{{play_app.name}} mode=0644
-  when: play_app.environment_file is defined
-
-- name: Copy Java settings for startup script
-  template: src=application.ini.j2 dest=/usr/share/{{play_app.name}}/conf/application.ini mode=0644
-
-- name: Restart service to apply configuration
-  service: name={{play_app.name}} state=restarted
+- import_tasks: play_app_yum.yml
+  when: ansible_pkg_mgr == "yum" and ansible_distribution == "RedHat"

@@ -1,0 +1,47 @@
+- name: Copy .deb package ============================= apt
+  copy: src={{ play_app.debian_package_path }} dest=/home/deploy/{{ play_app.name }}.deb
+  when:
+     - ansible_facts['os_family'] == "Debian"
+
+- name: Check if the service is already running ==================== apt
+  shell: systemctl is-active {{ play_app.name }}
+  register: service_active
+  failed_when: false
+
+- name: Stop service if already running ================== apt
+  service: name={{play_app.name}} state=stopped
+  when: service_active.rc == 0
+
+- name: Remove RUNNING_PID file ============================ apt
+  file: path=/var/run/{{play_app.name}}/play.pid state=absent
+
+- name: Install .deb ============================== apt
+  command: dpkg -i --force-confnew /home/deploy/{{play_app.name}}.deb
+  when:
+     - ansible_facts['os_family'] == "Debian"
+
+- name: Copy application.conf ============================== apt
+  copy: src={{play_app.main_conf_file}} dest=/usr/share/{{play_app.name}}/conf/application.conf mode=0644
+
+- name: Copy extra config files ============================ apt
+  copy: src={{item}} dest=/usr/share/{{play_app.name}}/conf/ mode=0644
+  when: play_app.extra_conf_files is defined
+  with_items:
+    - "{{play_app.extra_conf_files}}"
+
+- name: Copy logger configuration ============================= apt
+  copy: src={{play_app.logger_conf_file}} dest=/usr/share/{{play_app.name}}/conf/logger.xml mode=0644
+
+- name: Copy ehcache configuration ============================== apt
+  template: src=ehcache.xml.j2 dest=/usr/share/{{play_app.name}}/conf/ehcache.xml mode=0644
+
+- name: Copy environment file ================================== apt
+  copy: src={{play_app.environment_file}} dest=/etc/default/{{play_app.name}} mode=0644
+  when: play_app.environment_file is defined
+
+- name: Copy Java settings for startup script ================================ apt
+  template: src=application.ini.j2 dest=/usr/share/{{play_app.name}}/conf/application.ini mode=0644
+
+- name: Restart service to apply configuration ============================== apt
+  service: name={{play_app.name}} state=restarted
+
