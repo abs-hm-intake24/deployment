@@ -1,4 +1,5 @@
-- name: Make sure ImageMagick is installed
-  yum: pkg=ImageMagick state=installed
-  when: ansible_os_family == "RedHat"
-  become: true
+- import_tasks: imagemagick_apt.yml
+  when: ansible_pkg_mgr == "apt"
+ 
+- import_tasks: imagemagick_yum.yml
+  when: ansible_pkg_mgr == "yum" and ( ansible_distribution == "RedHat" )
