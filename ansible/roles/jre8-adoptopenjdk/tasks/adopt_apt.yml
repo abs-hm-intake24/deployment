@@ -1,0 +1,25 @@
+- name: Install AdoptOpenJDK JRE 8 ========================== apt
+  yum: name=adoptopenjdk-8-hotspot-jre state=latest
+
+- name: Add the AdoptOpenJDK signing key ======================================= apt
+  apt_key:
+    url: https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public
+    state: present
+
+- name: Add the AdoptOpenJDK apt repository =============================================== apt
+  apt_repository:
+    repo: deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ bionic main
+    filename: adoptopenjdk
+    state: present
+
+- name: Update apt ========================================== apt
+  apt: update_cache=yes cache_valid_time=86400
+
+- name: Install AdoptOpenJDK JRE 8 ================================ apt
+  apt: name=adoptopenjdk-8-hotspot-jre state=latest
+
+- name: Make sure correct JRE is selected for /usr/bin/java ============================== apt
+  alternatives:
+    name: java
+    path: /usr/lib/jvm/adoptopenjdk-8-hotspot-jre/bin/java
+

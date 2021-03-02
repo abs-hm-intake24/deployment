@@ -4,6 +4,13 @@
   when: ansible_os_family == "RedHat"
   become: yes
 
+- name: Install nginx
+  action: apt pkg={{ item }} state=latest
+  become: yes
+  when: ansible_os_family == "Debian"
+  with_items:
+   - nginx
+
 - name: Generate Diffie-Helmann parameters 
   become: yes
   command: /usr/bin/openssl dhparam -dsaparam -out /etc/nginx/dhparam.pem 2048
