@@ -26,7 +26,6 @@
 
 - name: Restore database snapshot (schema)
   command: /usr/bin/pg_restore -U {{postgres_admin_user}} -n public --no-owner --no-acl --role={{intake24.system_database.user}} --dbname {{intake24.system_database.name}} /home/deploy/intake24_system_schema.pgcustom
-  
 
 - name: Restore database snapshot (constants)
   command: /usr/bin/pg_restore -U {{postgres_admin_user}} -n public --no-owner --no-acl --role={{intake24.system_database.user}} --dbname {{intake24.system_database.name}} /home/deploy/intake24_system_data.pgcustom
