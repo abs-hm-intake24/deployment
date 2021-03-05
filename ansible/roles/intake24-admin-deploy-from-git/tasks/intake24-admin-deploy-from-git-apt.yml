@@ -1,0 +1,7 @@
+- name: Make sure Git is installed
+  apt:
+    name: git
+    state: present 
+    update-cache: yes
+    cache_valid_time: 86400
+

@@ -1,0 +1,3 @@
+- name: Make sure ImageMagick is installed ============================= apt
+  apt: pkg=imagemagick state=latest
+  become: true

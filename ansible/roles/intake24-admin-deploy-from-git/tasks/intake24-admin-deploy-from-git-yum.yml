@@ -1,0 +1,4 @@
+- name: Make sure Git is installed =============================== yum
+  yum:
+    name: git
+    state: present 
