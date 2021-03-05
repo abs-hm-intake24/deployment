@@ -1,8 +1,23 @@
 ---
 
+- name: Wait up to 120 seconds for host to become reachable =========================== apt
+  wait_for_connection:
+    timeout: 120
+
 - import_tasks: deploy-user-apt.yml
   when: ansible_pkg_mgr == "apt"
 
 - import_Tassk: deploy-user-yum.yml
   when: ansible_pkg_mgr == "yum"
 
+- name: Add deploy key
+  authorized_key: user=deploy key="{{ lookup('file', deploy_user.ssh_public_key_path) }}"
+
+- name: Add deploy users to sudoers
+  lineinfile: dest=/etc/sudoers line='deploy ALL=(ALL:ALL) NOPASSWD:ALL' regexp='^deploy ALL=' state=present
+
+- name: Disable root login
+  lineinfile: dest=/etc/ssh/sshd_config line="PermitRootLogin no" regexp="^PermitRootLogin" state=present
+
+- name: Restart sshd
+  service: name=sshd state=restarted

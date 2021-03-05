@@ -1,5 +1,5 @@
-- import_tasks: imagemagick_apt.yml
+- import_tasks: install_apt.yml
   when: ansible_pkg_mgr == "apt"
  
-- import_tasks: imagemagick_yum.yml
+- import_tasks: install_yum.yml
   when: ansible_pkg_mgr == "yum" and ( ansible_distribution == "RedHat" )

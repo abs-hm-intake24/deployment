@@ -1,6 +1,51 @@
+- name: Set nodejs version
+  set_fact:
+    nodejs_version: "10.x"
+
 - import_tasks: intake24-admin-build-yum.yml
   when: ansible_pkg_mgr == "yum" and ansible_os_family == "RedHat"
 
 - import_tasks: intake24-admin-build-apt.yml
   when: ansible_pkg_mgr == "apt"
 
+- name: Create a symlink between nodejs and node
+  file: src=/usr/bin/node dest=/usr/bin/nodejs state=link
+
+- name: Create Grunt build config
+  become_user: "{{ app.name }}"
+  template:
+    src: "config.json.j2"
+    dest: "{{ app.directory }}/config.json"
+
+- name: Make sure npm package dependencies are installed
+  become_user: "{{ app.name }}"
+  command: npm install
+  args:
+    chdir: "{{ app.directory }}"
+
+- name: Build Intake24 admin tool
+  become_user: "{{ app.name }}"
+  command: npm run build
+  args:
+    chdir: "{{ app.directory }}"
+
+- name: Bind only to local interface
+  become_user: "{{ app.name }}"
+  lineinfile:
+    dest: "{{ app.directory }}/app.js"
+    regexp: "^app.listen"
+    line: "app.listen({{ app.http_port }}, '{{ app.http_address }}');"
+
+- name: Make sure i18n directory exists
+  become_user: "{{ app.name }}"
+  file:
+    name: "{{ app.directory }}/public/i18n"
+    state: directory
+    owner: "{{ app.name }}"
+    group: "{{ app.name }}"
+
+- name: Build message files
+  become_user: "{{ app.name }}"
+  command: npm run i18n
+  args:
+      chdir: "{{ app.directory }}"

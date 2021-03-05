@@ -1,3 +1,0 @@
-- name: Make sure ImageMagick is installed ======================= yum
-  yum: pkg=ImageMagick state=installed
-  become: true

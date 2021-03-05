@@ -1,7 +1,8 @@
-- name: Make sure Git is installed
-  yum:
-    name: git
-    state: present
+- import_tasks: intake24-admin-deploy-from-git-yum.yml
+  when: ansible_pkg_mgr == "yum" and ansible_os_family == "RedHat"
+
+- import_tasks: intake24-admin-deploy-from-git-apt.yml
+  when: ansible_pkg_mgr == "apt"
 
 - name: Make sure .ssh directory exists for intake24-admin
   file:
@@ -25,3 +26,4 @@
     version: "{{ git.branch_name }}"
     force: yes
     accept_hostkey: true
+

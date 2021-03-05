@@ -1,20 +1,3 @@
-
-- name: Wait up to 120 seconds for host to become reachable =========================== apt
-  wait_for_connection:
-    timeout: 120
-
 - name: Create deploy user =========================== apt
   user: name=deploy state=present groups=sudo shell=/bin/bash
-
-- name: Add deploy key =========================== apt
-  authorized_key: user=deploy key="{{ lookup('file', deploy_user.ssh_public_key_path) }}"
-
-- name: Add deploy users to sudoers =========================== apt
-  lineinfile: dest=/etc/sudoers line='deploy ALL=(ALL:ALL) NOPASSWD:ALL' regexp='^deploy ALL=' state=present
-
-- name: Disable root login =========================== apt
-  lineinfile: dest=/etc/ssh/sshd_config line="PermitRootLogin no" regexp="^PermitRootLogin" state=present
-
-- name: Restart sshd =========================== apt
-  service: name=sshd state=restarted
 
