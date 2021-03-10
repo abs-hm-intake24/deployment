@@ -24,6 +24,16 @@
   copy: src=nginx-yum.conf dest=/etc/nginx/nginx.conf backup=yes
   when: ansible_pkg_mgr == "yum"
 
+- name: Create sites-avaiable directory
+  file:
+    path: /etc/nginx/sites-available
+    state: directory
+
+- name: Create sites-enabled directory
+  file:
+    path: /etc/nginx/sites-enabled
+    state: directory
+
 - name: Disable default nginx site
   file: path=/etc/nginx/sites-enabled/default state=absent
 
