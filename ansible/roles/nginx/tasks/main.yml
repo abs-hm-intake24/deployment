@@ -1,22 +1,28 @@
 ---
-- name: Install nginx
-  yum: pkg=nginx state=latest
+- import_tasks: install-nginx-yum.yml
+  when: ansible_pkg_mgr == "yum"
+
+- name: Install nginx ============================ yum
+  yum: pkg=nginx state=latest enablerepo=epel
   when: ansible_os_family == "RedHat"
   become: yes
 
-- name: Install nginx
-  action: apt pkg={{ item }} state=latest
+- name: Install nginx ===================== apt
+  action: apt pkg=['nginx'] state=latest
   become: yes
-  when: ansible_os_family == "Debian"
-  with_items:
-   - nginx
+  when: ansible_pkg_mgr == "apt"
 
 - name: Generate Diffie-Helmann parameters 
   become: yes
   command: /usr/bin/openssl dhparam -dsaparam -out /etc/nginx/dhparam.pem 2048
 
-- name: Copy nginx config
-  copy: src=nginx.conf dest=/etc/nginx/nginx.conf backup=yes
+- name: Copy nginx config ================================= apt
+  copy: src=nginx-apt.conf dest=/etc/nginx/nginx.conf backup=yes
+  when: ansible_pkg_mgr == "apt"
+
+- name: Copy nginx config ============================ yum
+  copy: src=nginx-yum.conf dest=/etc/nginx/nginx.conf backup=yes
+  when: ansible_pkg_mgr == "yum"
 
 - name: Disable default nginx site
   file: path=/etc/nginx/sites-enabled/default state=absent
