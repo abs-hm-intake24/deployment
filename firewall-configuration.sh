@@ -3,9 +3,8 @@
 ## Declare the array
 declare -a public_ports=(8081 8082 9001)
 
-distribution=`sudo lsb_release -a | grep "Distribution ID"`
-
-if [[ $distribution == "Ubuntu" ]]; then
+distributor=`sudo lsb_release -a | grep "Distributor ID"`
+if [[ $distributor == *"Ubuntu"* ]]; then
 for port in "${public_ports[@]}"
 do
  sudo ufw allow from any to any port $port proto tcp
