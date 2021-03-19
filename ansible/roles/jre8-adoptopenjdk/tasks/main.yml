@@ -3,8 +3,3 @@
 
 - import_tasks: install_yum.yml
   when: ansible_pkg_mgr == "yum" and ansible_distribution == "RedHat"
-
-- name: Make sure correct JRE is selected for /usr/bin/java
-  alternatives:
-    name: java
-    path: /usr/lib/jvm/adoptopenjdk-8-hotspot-jre/bin/java

@@ -15,3 +15,8 @@
 
 - name: Install AdoptOpenJDK JRE 8 =================================== yum
   yum: name=adoptopenjdk-8-hotspot state=latest
+
+- name: Make sure correct JRE is selected for /usr/bin/java
+  alternatives:
+    name: java
+    path: /usr/bin/jvm/adoptopenjdk-8-hotspot/bin/java

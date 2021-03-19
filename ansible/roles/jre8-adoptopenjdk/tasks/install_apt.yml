@@ -15,4 +15,8 @@
 - name: Install AdoptOpenJDK JRE 8 ================================ apt
   apt: name=adoptopenjdk-8-hotspot-jre state=latest
 
+- name: Make sure correct JRE is selected for /usr/bin/java
+  alternatives:
+    name: java
+    path: /usr/lib/jvm/adoptopenjdk-8-hotspot-jre-amd64/bin/java
 
