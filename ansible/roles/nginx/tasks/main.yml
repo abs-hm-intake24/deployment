@@ -8,8 +8,10 @@
   become: yes
 
 - name: Install nginx ===================== apt
-  action: apt pkg=['nginx'] state=latest
+  action: apt pkg={{ item }} state=latest
   become: yes
+  with_items:
+    - nginx
   when: ansible_pkg_mgr == "apt"
 
 - name: Generate Diffie-Helmann parameters 
