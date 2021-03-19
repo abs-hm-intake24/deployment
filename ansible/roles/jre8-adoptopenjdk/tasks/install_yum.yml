@@ -19,4 +19,4 @@
 - name: Make sure correct JRE is selected for /usr/bin/java
   alternatives:
     name: java
-    path: /usr/bin/jvm/adoptopenjdk-8-hotspot/bin/java
+    path: /usr/lib/jvm/adoptopenjdk-8-hotspot/bin/java
