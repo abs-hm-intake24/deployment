@@ -1,6 +1,6 @@
 - name: Add the AdoptOpenJDK yum repository ================================= yum
   yum_repository:
-    baseurl: rpm https://adoptopenjdk.jfrog.io/adoptopenjdk/rpm/
+    baseurl: rpm https://adoptopenjdk.jfrog.io/adoptopenjdk/rpm/rhel/7/x86_64
     name: adoptopenjdk
     description: Adoptopenjdk YUM repo
     state: present
