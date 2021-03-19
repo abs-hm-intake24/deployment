@@ -1,11 +1,11 @@
 - name: Add the AdoptOpenJDK yum repository ================================= yum
   yum_repository:
-    baseurl: rpm https://adoptopenjdk.jfrog.io/adoptopenjdk/rpm/rhel/7/x86_64
-    name: adoptopenjdk
+    baseurl: http://adoptopenjdk.jfrog.io/adoptopenjdk/rpm/rhel/7/x86_64
+    name: AdoptOpenJDK
     description: Adoptopenjdk YUM repo
     state: present
-    enabled: yes
-    gpgcheck: yes
+    enabled: 1
+    gpgcheck: 1
     gpgkey: https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public
 
 - name: Update all packages =============================== yum
@@ -14,4 +14,4 @@
     state: latest
 
 - name: Install AdoptOpenJDK JRE 8 =================================== yum
-  yum: name=adoptopenjdk-8-hotspot-jre state=latest
+  yum: name=adoptopenjdk-8-hotspot state=latest
