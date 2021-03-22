@@ -1,13 +1,13 @@
 #!/bin/bash
 
 ## Declare the array
-declare -a public_ports=(8081 8082 9001)
+declare -a public_ports=(8081 8082 9001 5432)
 
 distributor=`sudo lsb_release -a | grep "Distributor ID"`
 if [[ $distributor == *"Ubuntu"* ]]; then
 for port in "${public_ports[@]}"
 do
- sudo ufw allow from any to any port $port proto tcp
+ sudo ufw allow $port/tcp
 done
 
 ## If distribution is not Ubuntu
