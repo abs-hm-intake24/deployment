@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## Declare an array variable of ports
-declare -a ports=(9001 6400 8081 8082 8002 8003 6401 6403)
+declare -a ports=(9001 6400 8081 8082 8002 8003 6401 6403 5432)
 
 ## Now loop through the above array
 for port in "${ports[@]}"
