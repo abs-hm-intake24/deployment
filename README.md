@@ -26,9 +26,11 @@ components:
 #### Intake24 backend
 
 Intake24 backend can run on any GNU/Linux distribution using systemd, but 
-Intake24 is only regularly tested on Ubuntu Server 18.04 LTS. 
+Intake24 is only regularly tested on Ubuntu Server 18.04 LTS and Red Hat Linux Enterprise 7.9. 
 
 Ubuntu Server 16.04 will work too with minor changes to the deployment scripts.
+
+
 
 The complete Intake24 backend currently requires about 4 GB of RAM and is not
 particularly CPU sensitive.
@@ -37,7 +39,14 @@ particularly CPU sensitive.
 
 Make sure `git` is installed on the control machine, e.g.:
 
+Ubuntu:
+
     sudo apt-get install git
+
+RHEL: 
+```
+sudo yum install git
+```
 
 Clone this repository:
 
