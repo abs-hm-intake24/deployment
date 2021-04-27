@@ -1,520 +1,774 @@
-These instructions assume that the control machine, i.e. the one used to build & 
-install Intake24 runs a flavour of Debian GNU/Linux. They have been tested with 
-Ubuntu 18.04 both running natively and in the Windows Subsystem for Linux.
+# Intake24 deployment
 
-The instructions should work on macOS with minimal changes such as replacing the 
-`apt-get` commands with the corresponding Homebrew or MacPorts commands.
+## Pre-requisites
 
-Following instructions assume simple one-host deployment model using example
-host 192.168.1.1 and nginx sites served on following ports:
-- API Server - 8001
-- Admin Site - 80
-- Survey Site - 8000
+### Supported Systems
 
-Any of these can be deployed to own dedicated host. While you set up your hosts
-in step 2, replace 192.168.1.1 accordingly (either with symbolic name or IP).
- 
-### 1. Install Ansible and supporting tools
+Linux Ubuntu 18.04 LTS, Red Hat Linux Enterprise 7
 
-    sudo apt-get install ansible sshpass
+The build will requires a minimum of 4GB of RAM and it is highly recorded that the system has at least a quad-core processor.
 
-### 2. Define target host(s)
+## Getting Started
 
-Edit `instances/(instance name)/hosts`. Replace the `host.name.tld` placeholder
-with the target host names corresponding to their intended roles.
+If you're on a Red Hat based system make sure your subscription manager is registered to Red Hat
 
-For a simple single-server installation, just replace `host.name.tld` with the
-server's host name throughout the file. This can be either a symbolic name 
-(like `intake24.co.uk`) or an IP address. These instructions have only been 
-tested with IPv4, but IPv6 should work too.
+```bash
+sudo subscription-manager register --username <username> --password <password> --auto-attach
+```
 
-### 3. Configure SSH access to the server(s)
+where username and password are what you used to log onto Red Hat website.
 
-The deployment scripts for Intake24 use [Ansible](https://docs.ansible.com/), 
-a configuration automation tool that works over SSH. 
+##### Install lsb core
 
-The remote user used by Ansible scripts can either be created manually server-side, 
-or set up automatically using the steps below.
+RHEL/CentOS:
 
-**If you'd like to use an existing or a manually created user, make sure that 
-the remote user account has passwordless sudo access.** You can then skip to 3.4.
+```bash
+sudo yum install redhat-lsb-core
+```
 
-#### 3.1. Generate `deploy` user's SSH keys using ssh-keygen
+Ubuntu:
 
-For best security generate a separate key for each host or host group. 
+```bash
+sudo apt-get install lsb-core
+```
 
-It doesn't matter where you store them as long as the directory is reasonably 
-secure.
+##### Make sure that git is installed 
 
-For a simple single-server set-up with one key, from the instance configuration 
-directory (e.g. `instances/main`) run:
+RHEL/CentOS:
 
-    cd ssh
-    ssh-keygen -N "" -f deploy
-   
+Unfortunately RHEL 7 only come with git version 1.8. However, for this project we wgit -ill need git to be at least 2.x
 
-#### 3.2. Create `deploy` user on the server(s)
+```bash
+sudo yum remove git*
+sudo yum -y install https://packages.endpoint.com/rhel/7/os/x86_64/endpoint-repo-1.7-1.x86_64.rpm
+sudo yum install git
+```
 
-For each server, make a copy of the `host.name.tld.bootstrap` file in `host_vars`. 
-The name should either be the server's host name or its IP address, but it must 
-be the same name as the one used in the `hosts` file, e.g.:
+Ubuntu:
 
-    cp host.name.tld.bootstrap 192.68.1.1
+```bash
+sudo apt update
+sudo apt install git
+```
 
-Edit the file to set the user name and authentication method that should be used 
-for the initial log on and the path to the public SSH key generated in step 1.
+##### Clone the deployment repository
 
-The user must have the permission to use `sudo`. 
+Next up you will need to clone the Intake24 deployment repository. We've forked the repository but the official repository can be found at ```https
 
-Then from the root directory of the deployment project run:
+```bash
+git clone -b support/rhel https://github.com/abs-hm-intake24/deployment.git
+```
 
-    ./create-deploy-user.sh (instance name)
+##### Port and firewall configurations
 
-Where `(instance name)` is the name of a subdirectory in `instances` describing 
-an Intake24 instance.
+Policy-core-utils (RHEL and CentOS)
 
-#### 3.3. Delete the bootstrap configuration files
+Install policy-core-utils-python
 
-At this point access using the initial (potentially root) user is no longer
-required and these configuration files should be removed to avoid storing any
-passwords in plain text files.
+```
+sudo yum install policycoreutils-python
+```
 
-Delete all of the files created during step 2 as well as `host.name.tld.bootstrap`.
+Now if you'd like to change the ports you'll need to edit ```port-configuration.sh``` 
 
-#### 3.4. Create the deployment configuration files
+```bash
+sudo nano port-configuration.sh
+```
 
-As described in step 3.2, make a copy of the `host.name.tld` file for each
-server. For automated `deploy` user setup described in 3.1-3.3 no further steps
-are required.
+In here just replace the ports within array to whatever ports you'd like to use. 
 
-If a pre-existing user account is to be used instead, edit the files accordingly 
-to change the user name and point to the user's private key file.
+The same can be done with the public ports for the firewall at
 
-### 4. Initialise the databases
+```bash
+sudo nano firewall-configuration.sh
+```
 
-Intake24 uses PostgreSQL version 9.6. PostgreSQL installation and configuration
-is automated using Ansible.
+From the root of the deployment directory run the below commands to set ports:
 
-#### 4.1. Install Ansible dependencies
+```
+./port-configuration.sh
+./firewall-configuration.sh
+```
 
-From the root of the repository run:
+### Install Ansible and supporting tools
 
-    cd ansible
-    ansible-galaxy install -r requirements.yml
+On RHEL7 or CentOS7:
 
-#### 4.2. Get seed data snapshots
+```bash
+sudo subscription-manager repos --enable rhel-7-server-ansible-2.9-rpms
+sudo yum install ansible sshpass
+```
 
-Database snapshots are currently unavailable from public sources. Contact
-[Ivan Poliakov](mailto:ivan.poliakov@newcastle.ac.uk?subject=Intake24%20database%20snapshots)
-to request snapshots.
+On Ubuntu:
 
-#### 4.3. Edit database configuration
+```bash
+sudo apt-get install ansible sshpass
+```
 
-Edit `instances/(instance name)/database/postgres-configuration.yml`.
+### Copy the example instance
 
-Set the following values in the `intake24` section:
+Copy the ```instances/example``` and name the new instance to whatever you want. From the deployment directory run:
 
-- `admin_user_email` must be a valid e-mail address in order to receive system
-notifications or reset the password. The default password is `intake24`.
-- `system_database.schema_snapshot_path`, `system_database.data_snapshot_path`
-and `food_database.snapshot_path` must point to the initial database snapshot
-files in PostgreSQL format (see 4.2).
-- (Optional) Set the database and user names.
+```bash
+sudo cp -r instances/example instances/intake24
+```
 
-#### 4.4. Run the database initialisation script
+### Define target host(s)
 
-From the root of the repository run:
+Edit the hosts file within your instance
 
-    ./create-databases.sh (instance name)
+```bash
+sudo nano /usr/share/deployment/instances/(instance name)/hosts
+```
 
-In case the database set up script fails after the databases have already been 
-created the databases will need to be deleted manually to re-run the script. This 
-is intended to prevent unintentional data loss.
+Replace all the ```host.name.tld``` with your target host names corresponding to their intended roles. For a single-server installation you can simply replace ```host.name.tld``` with the server host name through out e.g. 
 
-Databases can be deleted by running the following commands **(on the database 
-server, not the control machine)**, assuming default database names:
+![Hosts](file://C:\Users\TontrakunChaimongkol\Downloads\Hosts.PNG?lastModify=1615256685)
 
-    sudo -u postgres -c "drop database intake24_system"
-    sudo -u postgres -c "drop database intake24_foods"
+### Configure SSH access to the server(s)
 
-### 5. Build and install the Intake24 API server
+The deployment scripts for Intake24 use Ansible which is a configuration automation tool that works over SSH.
 
-The Intake24 API server is mostly written in Scala and runs on the JVM.
+The remote user used by Ansible scripts can either be created manually server-side, or set up automatically using the steps below.
 
-#### 5.1 Install build dependencies
+#### Generate ```deploy``` user's SSH keys using ssh-keygen
 
-##### 5.1.1. Java Development Kit (JDK)
+For best security generate a separate key for each host or host group
 
-Intake24 must currently be built using JDK 8. To install it run:
+For a simple single-server setup with one key, from ```instances/(instance name)``` run:
 
-    sudo apt-get install openjdk-8-jdk-headless
-    
-**Warning**: due to [recent changes to Oracle's support strategy for the Java platform](https://www.oracle.com/technetwork/java/javase/overview/oracle-jdk-faqs.html) 
-Oracle is no longer going to provide updates to older JDK versions. The above command will typically install 
-an OpenJDK 8 distribution provided by the OS maintainers but it is no longer possible to ensure what exact version
-is going to be installed.
+```bash
+cd ssh
+sudo ssh-keygen -N "" -f deploy
+```
 
-**It is highly recommended to use a JDK distribution from [AdoptOpenJDK](https://adoptopenjdk.net/) instead.** 
+The keypair should be in the ssh directory where the private key is in the deploy file and the public key is in the deploy.pub
 
+#### Create ```deploy``` user on the server(s)
 
-##### 5.1.2. Scala Build Tool (SBT)
-Intake24 API project uses the [SBT](https://scala-sbt.org) build tool. To install it run the 
-following command from root of the deployment repository:
+For each new server you will need to make a copy of the ```host.example.tld.bootstrap``` file in ```host_vars```. The name should be either the server's host name or IP address as such it has to be the same as the one that is being used in ```hosts``` file e.g.
 
-    sudo ./build-deps/install-sbt.sh
+From the ```host_vars``` directory run:
 
-This will add the official SBT binary repository to the system software sources 
-and install the latest version of SBT.
+```bash
+cp host.example.tld.bootstrap 192.168.56.10
+```
 
-##### 5.1.3. Gradle build tool
+Now you will need to edit the newly copied file to set the username and password that will be used for the initial log on. You will also need to configured the path to the public SSH key generated in step 4.1
 
-Intake24 API v2 project uses [Gradle](https://docs.gradle.org/current/userguide/installation.html). Please refer to 
-the tool's website for installation instructions.
+This user must have the permission to use sudo. Also change the python interpreter if the target machine does not have python 3.
 
-#### 5.2. Clone the Intake24 API server repositories
+Here is an example below: 
 
-Clone the main Intake24 API repository to a separate directory. **Do not clone it 
-inside the deployment repository directory structure**:
+ ![image-20210218135421420](file://C:\Users\TontrakunChaimongkol\AppData\Roaming\Typora\typora-user-images\image-20210218135421420.png?lastModify=1615257867)
 
-    git clone --recurse-submodules -j8 https://github.com/intake24/api-server
-    
-Clone the Intake24 API v2 repository:
+Once that is done from the deployment directory run:
 
-    git clone https://github.com/intake24/api-v2
+```bash
+./create-deploy-user.sh (instance name)
+```
 
-#### 5.3. Build the Intake24 API servers and related services
+### Initialise the databases
 
-##### 5.3.1. API v1 server
+The current version of PostgreSQL that Intake24 uses is 9.6. The installation and configuration will be automated using Ansible .
 
-From the root of the Intake24 API server (`api-server`) repository run:
+##### Install ANSX.postgresql using ansible-galaxy
 
-    sbt "apiPlayServer/debian:packageBin" "dataExportService/debian:packageBin"
+From deployment run:
 
-This process will download and install all the necessary dependencies and may take 
-quite a while during the first run (about 20 minutes depending on your CPU speed 
-and your Internet connection).
+```bash
+cd ansible
+ansible-galaxy install -r requirements.yml
+```
 
-Following builds will be much faster.
+*If you want ANSX.postgresql to be installed in root just run ansible-galaxy with sudo*
 
-##### 5.3.2. API v2 server
+##### Edit database configuration
 
-The API v2 server build process requires access to an instance of Intake24 SQL database in order to examine the 
-database schema and generate the Java definitions for database objects using [jOOQ](https://www.jooq.org/).
+From the deployment directory:
 
-In the root of the API v2 project (`api-v2`) repository copy `gradle.properties.example` to `gradle.properties`.
-Edit the `gradle.properties` file and set the database connection properties to point to a local instance 
-of the Intake24 database.
+```bash
+sudo nano instances/(instance name)/database/postgres-configuration.yml
+```
 
-Then run
+Change the ```admin_user_email``` to whatever you want to use to log into the admin panel. Set the ```schema_snapshot_path``` to the wherever the schema is located, ```data_snapshot_path``` to wherever the data snapshot is located and ```snapshot_path``` to wherever the foods snapshot is located at.
 
-    gradle :ApiServer:shadowJar
+![image-20210309142057612](C:\Users\TontrakunChaimongkol\AppData\Roaming\Typora\typora-user-images\image-20210309142057612.png)
 
-Which will produce a file called `api-v2/APIServer/build/libs/intake24-api-v2-(version)-all.jar`. Note the full path to 
-that file to use in the deployment script. 
+Make sure to also add the deploy user as below 
 
-#### 5.4. Install and configure JDK on the server
+![image-20210219105505455](file://C:\Users\TontrakunChaimongkol\AppData\Roaming\Typora\typora-user-images\image-20210219105505455.png?lastModify=1613696974?lastModify=1615263827)
 
-From the root of the deployment repository run:
+##### Add user postgres to sudoers
 
-     ./configure-java (instance name)
+RHEL7/CentOS7:
 
-This command will install and configure Java Runtime Environment version 8 from 
-[AdoptOpenJDK](https://adoptopenjdk.net/).
+```bash
+sudo adduser -G wheel postgres
+sudo passwd postgres
+```
 
-#### 5.5. Prepare the API server configuration files
+Ubuntu:
 
-##### 5.5.1. Generate encryption key for Play Framework
+```bash
+sudo adduser postgres
+sudo usermod -aG sudo postgres
+```
 
-In the Intake24 API repository directory, run:
+##### ANSX postgres configuration
 
-    sbt apiPlayServer/playGenerateSecret
+###### Turn on logging for ```users.yml``` 
 
-Copy the generated key (the part that follows the "Generated new secret:" message 
-and looks like this: `zV;3:xvweW]@G5JTK7j;At<;pSj:NM=g[ALNpj?[NiWoUu3jK;K@s^a/LPf8S:5K`) 
-and paste it into `instances/(instance name)/play-shared/http-secret.conf` in the 
-deployment repository.
+```bash
+sudo nano ~/.ansible/roles/ANXS.postgresql/tasks/users.yml
+```
 
-Paste the same key into the `authentication.jwtSecret` field in 
-`instances/(instance name)/api-server-v2/service.conf`.
+Edit```no_log``` to false.
 
-##### 5.5.2. Set up database connection URLs
+###### Change Postgres version to 9.6
 
-Edit `instances/(instance name)/play-shared/databases.conf` and adjust PostgreSQL 
-connection URLs if required. 
+You will need to edit the ANXS.postgresql and change the postgresql version to 9.6
 
-The default `localhost` URLs should work for a simple single server set up.
+```bash
+sudo nano ~/.ansible/roles/ANXS.postgresql/defaults/main.yml
+```
 
-Edit `instances/(instance name)/api-server-v2/service.conf` and update the database 
-connection URLs as above. 
+###### RHEL 7
 
-##### 5.5.3. Enter the SMTP details
+Remove epel-release from the ansible yum install task
 
-Edit `instances/(instance name)/play-shared/play.mailer.conf` and fill out the 
-outgoing SMTP server's details.
+```bash
+sudo nano ~/.ansible/roles/ANXS.postgresql/tasks/install_yum.yml
+```
 
-If left in mock mode the e-mail notifications can be found in the server's logs 
-(e.g. `journalctl -u intake24-api-server`).
+In the first task remove epel-release from the list
 
-##### 5.5.4. Edit application configuration
+![image-20210309151424110](C:\Users\TontrakunChaimongkol\AppData\Roaming\Typora\typora-user-images\image-20210309151424110.png)
 
-##### 5.5.4.1 API v1 server
+###### Create the database
 
-Edit `instances/(instance name)/api-server/application.conf` and change the 
-following:
+From the deployment directory run:
 
-- Set `intake24.adminFrontendUrl` to the public domain name or IP address of the 
-administrative site (e.g. `https://admin.intake24.co.uk`)
-- Set `intake24.surveyFrontendUrl` to the public domain name or IP address of 
-the survey site (e.g. `https://intake24.co.uk`)
-- Get a [reCAPTCHA key from Google](https://www.google.com/recaptcha)
-(v2 Checkbox) and set the  `recaptcha.secretKey` to the key given in the
-`Server side integration` section on reCAPTCHA's admin page
-- (Optional) If using Intake24's short URLs service) set `intake24.shortUrlServiceUrl` 
-to the internal IP address of the short URL service
-- (Optional) If using Twilio for SMS notifications, fill out the Twilio account 
-details in `twilio`
+```bash
+./create-databases.sh intake24
+```
 
-Edit `instances/(instance name)/api-server/nginx` and 
-`instances/(instance name)/api-server/nginx.json` and update the server name.
+### Build and install Intake24 API Server
 
-Edit `instances/(instance name)/data-export-service/application.conf` and change the 
-following:
+The Intake24 API server is mostly written in Scala and runs on the JVM
 
-- Set `intake24.apiServerUrl` to the public domain name or IP address of the 
-API server
-- Set `intake24.surveyFrontendUrl` to the public domain name or IP address of 
-the survey site (e.g. `https://intake24.co.uk`)
+##### Install build dependencies
 
-Default setup uses AWS S3 storage to access image database. Refer to
-[Using local portion size image database](https://github.com/intake24/api-server/wiki/Using-local-portion-size-image-database)
-to serve image files locally.
+###### Java Development Kit
 
-##### 5.5.4.2 API v2 server
+Intake24 in its current state can only be built using JDK 8. To install it run:
 
-Edit `instances/(instance name)/api-server-v2/service.conf` and change the 
-following:
+RHEL7/CentOS7:
 
-- Set `authentication.jwtSecret` to the shared JWT signing key (see 5.5.1)
+```bash
+sudo yum update
+sudo yum install java-1.8.0-openjdk-devel
+```
 
-- (If using local file storage) Set `secureURL.local.directory` to the path where downloadable files should be stored,
-e.g. `/opt/intake24/api-v2/local-files` 
+Ubuntu:
 
-- (If using local file storage) Set `secureURL.local.downloadURLPrefix` to a publicly accessible API v2 server URL,
-e.g. `https://api.intake24.co.uk/v2/files` 
+```bash
+sudo apt update
+sudo apt-get install openjdk-8-jdk-headless
+```
 
-##### 5.5.5. Edit build paths and JVM configuration
+Set ```JAVA_HOME``` path.  Bashrc is set to specific user. In our case we're setting it for the user Intake24
 
-##### 5.5.5.1. API v1 server
+```bash
+sudo nano /home/intake24/.bashrc
+```
 
-Edit `instances/(instance name)/api-server/play-app.json`:
+For root
 
-- Set `play_app.debian_package_path` to the path to the `.deb` package file 
-produced by step 5.3. It can be found at 
-`(api-server repo root)/ApiPlayServer/target/intake24-api-server_(version)_all.deb`
+```bash
+sudo su
+sudo nano ~/.bashrc
+```
 
-- (Optional) change the JVM memory settings as needed
+Inside of the .bashrc file input the below line
 
-Edit `instances/(instance name)/data-export-service/play-app.json`:
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-(version)-openjdk
+export PATH=$JAVA_HOME/bin:$PATH
+```
 
-- Set `play_app.debian_package_path` to the path to the `.deb` package file 
-produced by step 5.3. It can be found at 
-`(api-server repo root)/DataExportService/target/intake24-data-export_(version)_all.deb`
+Once that is done save the file and exit. Then run:
 
-- (Optional) change the JVM memory settings as needed
+```bash
+source /home/intake24/.bashrc
+```
 
-##### 5.5.5.2. API v2 server
+Check to see if ```JAVA_HOME``` has been set
 
-Edit `instances/(instance name)/api-server-v2/config.json`:
+```bash
+echo $JAVA_HOME
+```
 
-- Set `source_jar_path` to point to the JAR file produced by step 5.3.2
+###### Scala Build Tool
 
-- (Optional) change the JVM memory settings as needed 
-  
-#### 5.6. Applying database migrations
+Intake24 API project uses SBT. Refers to [SBT](https://www.scala-sbt.org) if you need additional information. From deployment directory run:
 
-- this step can be skipped if you have latest databases snapshots
-- to apply a database migration, refer to [Applying database migrations](https://github.com/intake24/api-v2/wiki/Applying-database-migrations)
+Red Hat based systems:
 
-#### 5.7. Install the API server services
+```bash
+sudo ./build-deps/install-sbt-yum.sh
+```
 
-From the deployment repository root run:
+Ubuntu based systems:
 
-    ./api-server.sh (instance name)
-    ./data-export-service.sh (instance name)
-    ./api-server-v2.sh (instance name)
+```bash
+sudo ./build-deps/install-sbt-apt.sh
+```
 
-#### 5.8. Install nginx proxy for the API server
+###### Gradle Build Tool
 
-##### 5.8.1. Install nginx
+Intake24 API v2 project uses Gradle as such we will need to install this. 
 
-From the deployment repository root run:
+Firstly you will need to install unzip if you don't already have it installed
 
-    ./configure-nginx.sh (instance name)
+Red Hat based systems:
 
-##### 5.8.2. Prepare the nginx configuration for API server
+```bash
+sudo yum install -y wget unzip
+```
 
-Edit the following files:
+Ubuntu:
 
-- `instances/(instance name)/api-server/nginx-site.json`
-- `instances/(instance name)/api-server/nginx-site`
+```bash
+sudo apt-get install -y wget unzip
+```
 
-Set the server names and ports as needed.
+Next up we will go into the ```/tmp``` folder to download Gradle (v6.3) before unzipping it into the normal path.
 
-Optional SSL setup: use `nginx-site-ssl` instead of `nginx-site` template
-- Delete `instances/(instance name)/api-server/nginx-site`
-- Rename `instances/(instance name)/api-server/nginx-site-ssl` to
-`instances/(instance name)/api-server/nginx-site`
-- Set your certificate and key path details 
-- Switch all external URLs in config files to point to https variant
+```bash
+cd /tmp
+wget https://services.gradle.org/distributions/gradle-6.3-bin.zip
+```
 
-##### 5.8.3. Create nginx site for API server
+Extract the downloaded zip file and copy it to ```/opt/gradle``` directory.
 
-From the deployment repository root run:
+```bash
+unzip gradle-*.zip
+sudo mkdir /opt/gradle
+sudo cp -pr gradle-*/* /opt/gradle
+```
 
-    ./nginx-api-server.sh (instance name)
+Verify that the extracted files are there by listing the contents 
 
+```bash
+ls /opt/gradle
+```
 
-### 6. Build and install the Intake24 admin site
+Set up the environment variables. We will first configure the profile for the PATH environment variable to include the Gradle's bin directory. Run the following command to add the environment:
 
-The admin site application is built automatically on the server, so this
-step is straightforward.
+```bash
+echo "export PATH=/opt/gradle/bin:${PATH}" | sudo tee /etc/profile.d/gradle.sh
+```
 
-Edit `instances/(instance name)/admin-site/app.json`
+Make this profile executable by using the ```chmod``` command.
+
+```bash
+sudo chmod +x /etc/profile.d/gradle.sh
+```
+
+Load the environmental variables to the current session by using the following command:
+
+```bash
+source /etc/profile.d/gradle.sh
+```
+
+Verify the Gradle installation
+
+```bash
+gradle -v
+```
+
+ ###### Apache Maven
+
+```bash
+cd /opt
+sudo wget https://www-eu.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+sudo tar xzf apache-maven-3.6.3-bin.tar.gz
+sudo ln -s apache-maven-3.6.3 maven
+```
+
+Then you will need to configure the environmental variables for Maven
+
+```
+sudo nano /etc/profile.d/maven.sh
+```
+
+Within that file you will need to put these two lines
+
+```bash
+export M2_HOME=/opt/maven
+export PATH=${M2_HOME}/bin:${PATH}
+```
+
+Now to load the environmental variables
+
+```bash
+source /etc/profile.d/maven.sh
+```
+
+Check the maven version by doing 
+
+```bash
+mvn -version
+```
+
+##### Clone the intake24 API server repositories
+
+Clone the intake24 API repository to separate directory. ***Do not clone it inside the deployment repository directory structure***: 
+
+First up currently it seems that the link to ```api-client``` is broken as such it will have to be excluded and cloned separately to all the other submodules.
+
+In our case we just clone it into ```/usr/share``` directory
+
+```bash
+cd /usr/share
+sudo git -c submodule."api-client".update=none clone -b support/rhel --recurse-submodules -j8 https://github.com/abs-hm-intake24/api-server.git
+cd /usr/share/api-server
+sudo git clone https://github.com/intake24/api-client.sudo nanogit
+```
+
+Within the ```api-server``` directory check to see if your current user have read and write permission. If they don't change the owner and group of all the files and folders within the directory to your current user. 
+
+```bash
+sudo chown -R USER:GROUP .
+```
+
+Once that is all done go into the ```api-server``` directory and run:
+
+RHEL7/CentOS7:
+
+```bash
+sbt "apiPlayServer/rpm:packageBin" "dataExportService/rpm:packageBin"
+```
+
+Ubuntu: 
+
+```bash
+sudo sbt "apiPlayServer/debian:packageBin"
+"dataExportService/debian:packageBin"
+```
+
+The above process will take quite awhile the first time you run it (approximately 30-40 minutes).
+
+### Build Intake24 API-v2 
+
+##### Clone the Intake24 api-v2 repository
+
+Next up we will need to clone Api-v2 into ```/usr/share``` or wherever you intend on keeping APi-v2:
+
+```bash
+sudo git clone https://github.com/intake24/api-v2.git
+```
+
+##### Build API-v2
+
+The API v2 server build process requires access to an instance of Intake24 SQL database in order to examine the database schema and generate the Java definitions for database objects using [jOOQ](![image-20210210144537655](C:\Users\TontrakunChaimongkol\AppData\Roaming\Typora\typora-user-images\image-20210210144537655.png)) 
+
+In the root of the API v2 project (```api-v2```) directory copy ```gradle.properties.example``` to ```gradle.properties```. Edit the ```gradle.properties``` file and set the database connection properties to a local instance of the Intake24 database.
+
+![image-20210310115307404](C:\Users\TontrakunChaimongkol\AppData\Roaming\Typora\typora-user-images\image-20210310115307404.png)
+
+Go into potsgresql and create the user intake24
+
+```bas
+sudo -u postgres psql
+```
+
+Once you're inside of postgresql
+
+```sql
+ALTER USER intake24 WITH PASSWORD 'intake24';
+```
+
+Now go back to the root of the ```api-v2``` and use the command (Make sure your user has the permission to write within the api-v2 directory and its subfolders)
+
+From the root of the ```api-v2``` directory runs:
+
+```bash
+sudo chown -R intake24:intake24 .
+gradle :ApiServer:shadowJar
+```
+
+This will produce a file at```/api-v2/APIServer/build/libs/intake24-api-v2-(version)-all.jar``` 
+
+##### Install Adopt OpenJDK JRE on the server
+
+From the root of the deployment directory run:
+
+```bash
+./configure-java intake24
+```
+
+### Prepare the configuration files
+
+##### Generate encryption Key for Play Framework
+
+From the ```api-server``` directory run:
+
+```bash
+sbt apiPlayServer/playGenerateSecret
+```
+
+Once that is done you will need to take the newly generated secret key and paste it into ```instances/(instance name)/play-shared/http-secret.conf``` in place of the secret key that is currently in there. 
+
+Then you will need to also paste it into ```authentication.jwtSecret``` field in ```instances/(instance name)/api-server-v2/service.conf``` 
+
+Within the service.conf file change the url for the db and foods to where you want to access it from
+
+![image-20210310121814181](C:\Users\TontrakunChaimongkol\AppData\Roaming\Typora\typora-user-images\image-20210310121814181.png)
+
+###### Optional (SMTP) details
+
+Edit the ```instances/(instance name)/play-shared/play.mailer.conf``  and fill out the outgoing SMTP server's details. If you do not do this you can find the server's logs by doing 
+
+```bash
+journalctl -u intake24-api-server
+```
+
+##### Edit the configuration files for API server
+
+Edit ```instances/(instance name)/api-server/application.conf``` and change the following:
+
+- Comment out the the line where it say ```S3StorageReadOnlyModule``` and uncomment the line below that if you're using local storage for images.
+
+- Set ```intake24.adminFrontendUrl``` to the public domain name or IP address of the administrative site in our case it will just be 192.168.56.10:8082
+- Set ```intake24.surveyFrontendUrl``` to the public domain name or IP address of the administrative site. In our case this will be 192.168.56.10:8081
+- Set ```localStorage.baseDirectory``` to where the images folder is located in our case it will be ```/usr/share/intake24-images```.
+- Set ```localStorage.urlPrefix``` to the public domain name or IP address of the api + images. In our case this will be 192.168.56.10:9001/images
+- (Optional) Get a [reCAPTCHA key from Google]([reCAPTCHA (google.com)](https://www.google.com/recaptcha/about/)) and in the field ```v2 Checkbox``` set the ```recaptcha.secretKey``` to the key give in the server side integration section of Google's captcha's admin page. 
+
+Edit `instances/(instance name)/api-server/nginx-site` change the following:
+
+- Set the server listen to what ever port you want to use api server on. 
+- Set the `server_name` to the public domain name or IP address in our case it will be 192.168.56.10
+- Port 9001 is the standard port used for intake24. If you want to use a different API port you will need to change the port used within the c# code
+- Set the `locaation /images/` to where ever you images are located `/usr/share/intake24-images`
+- Set the alias to `/usr/share/intake24-images`
+
+##### Edit the configuration files for Data Export Service
+
+Edit ```instances/(instance name)/data-export-service/application.conf``` and change the following:
+
+- Set ```apiServerUrl``` to the public domain name or IP address of the api server in our case it will just be 192.168.56.10:9001
+- Set ```surveyFrontendUrl``` to the public domain name or IP address of the survey frontend in our case it will just be 192.168.56.10:8081
+
+##### Edit the configuration files for Admin Site
+
+Edit ```/usr/share/deployment/instances/(instance name)/admin-site/nginx-site``` and change the following:
+
+- Set the listen ports to whatever ports you want the admin site to be on
+- Set the ```server_name``` to the public domain name or IP address. 
+
+Edit ```/usr/share/deployment/instances/(instance name)/admin-site/app.json/``` and change the following:
+
+- Set the ```api_base_url``` to your public domain name or IP address of api base urI.
+
+##### Edit the configuration files for Survey site
+
+Edit ```/usr/share/deployment/instances/(instance name)/survey-site/application.conf``` and change the following:
+
+- Set ```externalApiBaseUrl``` to the public domain name or IP address of the api server. In our case it will be 192.168.56.10:8001
+
+Edit ```/usr/share/deployment/instances/(instance name)/survey-site/nginx-site```  and change the following:
+
+- Set the listen ports to whatever ports you want the survey site to be on
+- Set the ```server_name``` to the public domain name or IP address.
+
+#### Build paths and JVM configuration
+
+###### 6.7.5.1 API v1 Server
+
+Edit the ```instances/(instance name)/api-server/play-app.json```:
+
+**RHEL7/CentOS7**: 
+
+- Change the ```debian_package_path``` to ```rpm_package_path``` then set the path to the```.rpm``` package file produced when sbt was run for API server. It should be located at ```/path/to/api-server/ApiPlayServer/target/rpm/RPMS/intake24-api-server-(version).noarch.rpm``` 
+
+Edit ```instances/(instance name)/data-export-service/play-app.json```:
+
+- Set the ```play_app.rpm_package_path``` to the ```.rpm``` package file produced when sbt was run for DataExportService. The file can be found at ```/path/to/api-server/DataExportService/target/intake24-data-export-(version)-all.rpm``` 
+
+**Ubuntu**:
+
+- Set the play_app.deb.package_path to the path of the .deb package file produced when sbt was run for API server. It should be located at ```/path/to/api-server/ApiPlayServer/target/intake24-api-server-(version)-all.deb```
+
+Edit ```instances/(instance name)/data-export-service/play-app.json```:
+
+- Set the ```play_app.deb_package_path``` to the ```.deb``` package file produced when sbt was run for DataExportService. The file can be found at ```/path/to/api-server/DataExportService/target/intake24-data-export_(version)_all.deb``` 
+
+###### 6.7.5.2 API v2 Server
+
+Edit ```instances/(instance name)/api-server-v2/config.json```:
+
+- Set ```source_jar_path``` to point to the JAR file produced by step the ``` API-v2 build``` which is located at ```/usr/share/api-v2/APIServer/build/libs/intake24-api-v2-1.0.0-all.jar```
+
+###### Ansible tasks for API, V2 and DataExport
+
+From the root of the deployment directory run:
+
+```bash
+./api-server.sh (instance name)
+./data-export-service.sh (instance name)
+./api-server-v2.sh (instance name)
+```
+
+#### Install nginx proxy for the API server
+
+From the root of the deployment folder run:
+
+```bash
+./configure-nginx.sh (instance name)
+,/nginx-api-server.sh (instance name)
+```
+
+### Build Intake24 Admin Site
+
+The admin site application is built automatically on the server so the step to get this working will be quite straight  forward.
+
+Edit ```instances/(instance name)/admin-site/app.json```
 
 Set the host names and ports in the following fields:
 
-- `app.http_port`
-- `app.http_address`
-- `app.api_base_url` (the API server's URL prefix as configured in section 5)
-- `app.recaptcha.site_key` - set to the public key given in the `Client side integration` section on Google reCAPTCHA's admin page
+- ```app.http_port```
+- ```app.http_address```
+- ```app.api_base_url``` (The API server's URL + port)
+- ```app.recaptcha.site_key``` - set to the public key given in the ```Client side integration``` section on Google reCAPTCHA's admin page (Only if you enabled reCAPTCHA)
 
-From the deployment repository root run:
+From the deployment directory run:
 
-    ./admin-site.sh (instance name)
+```bash
+./admin-site.sh (instance name)
+```
 
-##### 6.1. Prepare the nginx configuration for Admin site
-
-Edit the following files:
-
-- `instances/(instance name)/admin-site/nginx-site.json`
-- `instances/(instance name)/admin-site/nginx-site`
-
-Set the server names and ports as needed.
-
-For SSL setup, use `instances/(instance name)/admin-site/nginx-site-ssl` (step 5.7.2.).
-
-##### 6.2 Create nginx site for Admin site
-
-From the deployment repository root run:
-
-    ./nginx-admin-site.sh (instance name)
-
-
-### 7. Build and install the Intake24 survey site
-
-#### 7.1 Install build dependencies
-
-If you haven't installed the JDK yet, run:
-
-    sudo apt-get install openjdk-8-jdk-headless
-
-Skip this step if you have already installed it to build the API server as
-explained in section 5.
-
-Intake24 survey application uses the [Maven](https://maven.apache.org/) build 
-tool. The survey feedback module is built using [npm](https://www.npmjs.com/).
-
- To install them run:
-
-    sudo apt-get install maven npm
-
-#### 7.2. Clone the Intake24 survey site repository
-
-Clone the Intake24 survey site repository to a separate directory. **Do not 
-clone it inside the deployment repository directory structure**:
-
-    git clone --recurse-submodules -j8 https://github.com/intake24/survey-frontend
-
-#### 7.3. Build the Intake24 survey application
-
-From the root of the Intake24 survey site repository run:
-
-    mvn clean install -DskipTests
-
-The unit tests are currently out of date so they have to be skipped. Similar to
-building the API server, the build tool will download the dependencies on the
-first run and it will take some time.
-
-Maven will build the application using the [GWT](http://www.gwtproject.org/)
-Java to JavaScript compiler. It is highly recommended to use at least a quad
-core machine for this, otherwise the GWT optimisation step can take a very
-long time.
-
-#### 7.4. Build the Intake24 survey feedback module
-
-Run the following commands from the root of the Intake24 survey site repository:
-
-    cd intake24feedback
-    cp ./src/animate-ts/animate-base.config.ts ./src/animate-ts/animate.config.ts
-    npm install
-    npm run buildForPlay
-    
-
-#### 7.5. Build the Intake24 survey server
-
-Run the following commands from the root of the Intake24 survey site repository:
-
-    cd SurveyServer
-    sbt debian:packageBin
-
-#### 7.6. Prepare the configuration files for the survey server
-
-Run the following command from the root of the Intake24 survey site repostitory
-to generate a private key for Play Framework:
-
-    cd SurveyServer
-    sbt playGenerateSecret
-
-Copy the generated value (that looks like `aNF<@vv@3p<Y7aZWvA0VGUa^vy!Hq?c5t9]8/sKV3a0yzm6E7duB<Rdt7sy>J<xl`), then go to the deployment repository and paste
-it into `instances/(instance name)/survey-site/application.conf`.
-
-In the same file:
-
-- Set `intake24.internalApiBaseUrl` to the API server's host name or IP address reachable from the internal network. 
-- Set `intake24.externalApiBaseUrl` to the API server's public host name or IP address reachable from the Internet.
-- (Optional) Set `intake24.ga.trackingCode` to Google Analytics property code
-
-Edit `instances/(instance name)/survey-site/play-app.json` and change the following
-values:
-
-- Set `play_app.debian_package_path` to the path to the `.deb` package file 
-produced by step 7.6. It can be found at 
-`(survey-frontend repo root)/SurveyServer/target/intake24-survey-site_(version)_all.deb`
-
-- (Optional) change the HTTP listen addresses and ports
-
-- (Optional) change the JVM memory settings as needed
-
-#### 7.7. Install the Intake24 survey server
-
-From the deployment repository root run:
-
-    ./survey-site.sh (instance name) 
-
-##### 7.8. Prepare the nginx configuration for Survey server
+##### Edit the nginx configuration files for admin site
 
 Edit the following files:
 
-- `instances/(instance name)/survey-site/nginx-site.json`
-- `instances/(instance name)/survey-site/nginx-site`
+- ```instances/(instance name)/admin-site/nginx-site.json```
+  - Change the ```host_name``` to "intake24-admin"
+- ```instances/(instance name)/admin-site/nginx-site```
 
 Set the server names and ports as needed.
 
-For SSL setup, use `instances/(instance name)/survey-site/nginx-site-ssl` (step 5.7.2.).
+Once that is done in the root of the deployment directory run:
 
-##### 7.9 Create nginx site for Survey server
+```bash
+./nginx-admin-site.sh (instance name)
+```
 
-From the deployment repository root run:
+### Build Intake24 Survey Frontend
 
-    ./nginx-survey-site.sh (instance name)
+##### Clone the intake24 survey-front end repository
+
+```bash
+sudo git clone -b support/rhel --recurse-submodules -j8 https://github.com/abs-hm-intake24/survey-frontend.git
+```
+
+Make sure that javac path exists
+
+```bash
+javac -version
+```
+
+Make sure that the user that you're building with have read/write/execute permission within the survey-frontend folder. If not then run
+
+```bash
+sudo chown intake24:intake24 . -R
+```
+
+From the root of the survey-frontend directory run:
+
+```bash
+mvn clean install -DskipTests
+```
+
+##### Build the Survey Front end feedback module
+
+From the root of the Intake24 survey site directory run:
+
+```bash
+cd intake24feedback
+cp ./src/animate-ts/animate-base.config.ts ./src/animate-ts/animate.config.ts
+sudo npm install
+sudo npm run buildForPlay
+```
+
+You may run into issues with Insufficient entropy. This is a known issue and a fix is in the work currently. 
+
+Next up you may run into typescript version issues when you run ```buildForPlay``` if that's the case just follow the error message and install the version of typescript that is considered to be compatible. 
+
+Next up you will have to run a local maven install on Survey Client. 
+
+From the `/usr/share/survey-frontend/SurveyClient` directory as root user run:
+
+```
+mvn install
+```
+
+From the root of the ```/usr/share/survey-frontend/SurveyServer``` directory as root user run:
+
+```bash
+sbt rpm:packageBin
+```
+
+##### Prepare the configuration file for the survey server
+
+Run the following commands from the root of the ```SurveyServer``` directory to generate a private key for the Play Framework:
+
+```
+sbt playGenerateSecret
+```
+
+Copy the "Generated new secret" value and paste it into ```/usr/share/deployment/instances/(instance name)/survey-site/application.conf```
+
+- Set ```play.cryptor.secret``` to the newly generated key
+- Set ```intake24.internalApiBaseUrl``` to the API server's host name or IP address reachable from the internal network.
+- Set ```intake24.externalApiBaseUrl``` to the API server's public host name or IP address reachable from the internet. 
+
+Edit ```instances/(instance name)/survey-site/play-app.json``` and change the following values:
+
+**RHEL**: 
+
+Change the "debian_package_path" to "rpm_package_path"
+
+- Set ```rpm_package_path``` to the path of the ```.rpm``` package file produced by the sbt process. This file can be found at ```/home/intake24/survey-frontend/SurveyServer/target/rpm/RPMS/noarch/intake24-survey-site-(version).noarch.rpm``` 
+
+**Ubuntu** :
+
+- Set the ```debian_package_path``` to the path of the .deb package file produced from the sbt process. This file can be found at ```/usr/share/survey-frontend/SurveyServer/target/intake24-survey-site_(version)_all.deb``` 
+
+###### Install the Intake24 survey server
+
+From the deployment directory run:
+
+```bash
+./survey-site.sh (instance name)
+```
+
+##### Prepare the nginx configuration for Survey server
+
+Edit the following files:
+
+- ```instances/(instance name)/survey-site/nginx-site.json```
+- ```instances/(instance name)/survey-site/nginx-site```
+
+Set the server names and ports as needed.
+
+###### Install the nginx survey server
+
+From the deployment directory run:
+
+```bash
+./nginx-survey-site.sh (instance name)
+```
 
