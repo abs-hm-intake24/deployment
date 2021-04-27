@@ -36,7 +36,7 @@ sudo apt-get install lsb-core
 
 RHEL/CentOS:
 
-Unfortunately RHEL 7 only come with git version 1.8. However, for this project we wgit -ill need git to be at least 2.x
+Unfortunately RHEL 7 only come with git version 1.8. However, for this project we will need git to be at least 2.x
 
 ```bash
 sudo yum remove git*
@@ -329,7 +329,7 @@ sudo ./build-deps/install-sbt-apt.sh
 
 Intake24 API v2 project uses Gradle as such we will need to install this. 
 
-Firstly you will need to install unzip if you don't already have it installed
+Firstly, you will need to install unzip if you don't already have it installed
 
 Red Hat based systems:
 
