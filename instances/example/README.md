@@ -6,7 +6,7 @@
 
 Linux Ubuntu 18.04 LTS, Red Hat Linux Enterprise 7
 
-The build will requires a minimum of 4GB of RAM and it is highly recorded that the system has at least a quad-core processor.
+The build will requires a minimum of 4GB of RAM and it is highly recommended that the system has at least a quad-core processor.
 
 ## Getting Started
 
