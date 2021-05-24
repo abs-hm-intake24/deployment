@@ -48,4 +48,4 @@ Copy the `instances/example` directory to `instances/[short instance name]`:
     cd deployment
     cp -r instances/example instances/main
 
-Follow the instructions in `instances/example/README.md`.
+Follow the instructions in `instances/example/README.md`
